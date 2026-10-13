@@ -27,12 +27,13 @@ the code is `code/bsd.py`.)
 
 | Requirement | Result |
 |---|---|
-| R1 (above) | at Q = 50 the mean difference is positive at every $R_{th}$ in both scenarios; from $R_{th}=1$ on it is +0.3 to +4.6 (T2) and +2.3 to +24.0 (E3); at 0 and 0.5 within 1.3 SE (ties, as allowed); T2 at 1.5 (+0.30 ± 0.96) is the weakest point |
-| R2 (benchmark, Q = 50) | 80.6 vs sparse beamforming 73.1 and stream clustering on its streams nan (J: 81.4) |
+| R1 (above) | at Q = 50 the mean difference is positive at every $R_{th}$ in both scenarios; from $R_{th}=1$ on it is +0.3 to +4.6 (T2) and +2.3 to +24.0 (E3); at 0 and 0.5 within 1.4 SE (ties, as allowed); T2 at 1.5 (+0.30 ± 0.96) is the weakest point |
+| R2 (benchmark, Q = 50) | 80.6 vs sparse beamforming 73.1 (+7.5 ± 2.6, paired) and stream clustering on its streams 54.7 (+25.9 ± 1.7); J: 81.4 |
 | R3 (K = 16, $R_{th}$ = 2) | super-common 15.6%, group-common 9.2% of the sum rate |
 | R4 ($S^{\max}$ = 4…16) | rises for K = 8, 12, 16 and flattens from $S^{\max}$ ≈ 10–12 (largest dip −0.5 ± 0.5) |
 | BS-specific streams | in T2 b, d and E3 b–e (all runs): private streams at 1 or 2 BSs, group-common streams differing between BSs |
 | Method | no AO test, no tuned constant, deterministic, ≈ 1 ms; one start switch (off by default) |
+| For reference: the current framework J (Q = 50) | the design minus J: T2: -2.5 ± 0.9 over all runs (-7.5 at $R_{th}=0$, +3.1 at 2.5); E3: +1.7 ± 2.4 over all runs (-17.7 at $R_{th}=0$, +29.4 at 2.5) (not a requirement; Section 3.1) |
 
 
 ## 1. The design (thesis-ready description)
@@ -215,19 +216,19 @@ gives a higher rate at lower cost than the default start (Section 3.7).
   no evaluation of $F$.
 * **Per run** (design + search + refinement; `cpu` of the records, mean over the runs):
 
-| Tier | scenario | design | 1-layer | JH | J1 |
-|---|---|---|---|---|---|
-| screen, Q = 5 | T2 | 5.9 s | 4.0 s | 6.1 s | 4.4 s |
-| screen, Q = 5 | E3 | 25.2 s | 12.0 s | 8.8 s | 10.2 s |
-| confirm, Q = 50 | T2 | 66.0 s | 44.5 s | 20.4 s | — |
-| confirm, Q = 50 | E3 | 210.7 s | 116.4 s | — | — |
-| bench, Q = 50 | T2 | 103.2 s | | (FINDINGS §7: 90–120 s) | |
-| smax, Q = 50 | T2 | 43.1 s | | | |
+| Tier | scenario | design | 1-layer | J | JH | J1 |
+|---|---|---|---|---|---|---|
+| screen, Q = 5 | T2 | 5.9 s | 4.0 s | 7.7 s | 6.1 s | 4.4 s |
+| screen, Q = 5 | E3 | 25.2 s | 12.0 s | 13.6 s | 8.8 s | 10.2 s |
+| confirm, Q = 50 | T2 | 66.0 s | 44.5 s | 67.8 s | 73.6 s | 49.9 s |
+| confirm, Q = 50 | E3 | 210.7 s | 116.4 s | 100.6 s | 89.8 s | 100.2 s |
+| bench, Q = 50 | T2 | 103.2 s | stream clustering on it: 354 s | 102.2 s (stored) | | |
+| smax, Q = 50 | T2 | 43.1 s | | | | |
 
   In T2 the design costs about as much as the current design. It serves fewer distinct streams in settings b and d
-  and the same or fewer in the others. In E3 it serves more distinct streams than J, with private streams at 2 of 3
-  BSs plus group-common streams (up to 14 against 10 in setting e). The most expensive setting is E3 e at Q = 50
-  (about 400–500 CPU-s per run). With the default AO start the design costs 20–40% more (Section 3.7).
+  and the same or fewer in the others. In E3 it serves more distinct streams than J: the same private streams, each at 1
+  or 2 of the 3 BSs, plus group-common streams (up to 14 against 10 streams in setting e). The most expensive settings are E3 c, e and f at Q = 50
+  (310–390 CPU-s per run on average, at most 760). With the default AO start the design costs 20–40% more (Section 3.7).
 
 ## 3. Results of the design
 
@@ -239,147 +240,192 @@ blocks are unedited `tools/report.py` output.
 ### 3.1 R1 at Q = 50 (`--tier confirm`, 3 drops)
 
 ```
-===== scenario T2, Q = 50: 11 common runs (XZnc: 108, XZn1c: 108, JH: 11)
+===== scenario T2, Q = 50: 108 common runs (XZnc: 108, XZn1c: 108, JH: 108, J1: 108)
 -- T2, all settings
-   R_th    n      XZnc     XZn1c        JH        XZnc-XZn1c   QoS met XZnc/XZn1c/JH
-      0    2     83.60     81.89     89.03    +1.71± 4.10      2/2/2
-    0.5    2     82.21     80.78     85.76    +1.43± 4.37      2/2/2
-      1    2     82.33     78.05     81.01    +4.28± 1.42      2/2/2
-    1.5    2     77.15     77.69     76.83    -0.54± 1.96      2/2/2
-      2    2     77.21     71.78     75.06    +5.43± 4.52      2/2/2
-    2.5    1     93.60     98.20    101.07    -4.60±  nan      1/1/1
-    all   11     81.69     79.87     83.31    +1.82± 1.40      11/11/11
--- XZnc: mean served streams 7.64, group-common served 2.00, private served 4.64; BS-specific in 5/11 runs; per run, carried by a subset of the BSs: group-common 0.45, private 1.36
--- CPU per run (s): XZnc 29.1, XZn1c 13.5, JH 20.4; XZnc discrete design 0.001
-===== scenario E3, Q = 50: 108 common runs (XZnc: 108, XZn1c: 108)
+   R_th    n      XZnc     XZn1c         J        JH        J1        XZnc-XZn1c            XZnc-J   QoS met XZnc/XZn1c/J/JH/J1
+      0   18    117.20    116.59    124.68    123.91    123.76    +0.61± 1.26       -7.48± 2.99      18/18/18/18/18
+    0.5   18    115.47    114.61    121.41    120.44    120.85    +0.87± 0.65       -5.93± 2.70      18/18/18/18/18
+      1   18    110.32    109.01    113.54    113.02    112.95    +1.31± 0.72       -3.21± 1.79      18/18/18/18/18
+    1.5   18    101.18    100.88    103.61    103.47    103.59    +0.30± 0.96       -2.43± 1.90      18/18/18/18/18
+      2   18     94.28     90.65     93.54     94.06     93.22    +3.62± 1.28       +0.73± 0.81      18/18/18/18/18
+    2.5   18     79.97     75.35     76.86     77.34     75.61    +4.61± 1.92       +3.11± 1.47      15/15/15/15/15
+    all  108    103.07    101.18    105.61    105.37    105.00    +1.89± 0.51       -2.54± 0.90      105/105/105/105/105
+-- XZnc: mean served streams 9.11, group-common served 1.78, private served 6.33; BS-specific in 36/108 runs; per run, carried by a subset of the BSs: group-common 0.39, private 1.33
+-- J: stream-set test made in 36/108 runs, 1-layer kept in 12
+-- CPU per run (s): XZnc 66.0, XZn1c 44.5, J 67.8, JH 73.6, J1 49.9; XZnc discrete design 0.001
+===== scenario E3, Q = 50: 108 common runs (XZnc: 108, XZn1c: 108, JH: 108, J1: 108)
 -- E3, all settings
-   R_th    n      XZnc     XZn1c        XZnc-XZn1c   QoS met XZnc/XZn1c
-      0   18    121.78    120.60    +1.18± 1.24      18/18
-    0.5   18    119.56    119.50    +0.06± 1.22      18/18
-      1   18    117.86    115.61    +2.25± 0.99      18/18
-    1.5   18    114.77    107.32    +7.45± 2.10      18/18
-      2   18    112.26     96.60   +15.66± 2.91      18/18
-    2.5   18    107.88     83.93   +23.95± 5.29      18/15
-    all  108    115.69    107.26    +8.43± 1.38      108/105
+   R_th    n      XZnc     XZn1c         J        JH        J1        XZnc-XZn1c            XZnc-J   QoS met XZnc/XZn1c/J/JH/J1
+      0   18    121.78    120.60    139.50    139.60    139.09    +1.18± 1.24      -17.72± 4.78      18/18/18/18/18
+    0.5   18    119.56    119.50    133.02    133.37    132.32    +0.06± 1.22      -13.46± 3.99      18/18/18/18/18
+      1   18    117.86    115.61    124.99    126.26    124.38    +2.25± 0.99       -7.12± 3.67      18/18/18/18/18
+    1.5   18    114.77    107.32    112.79    112.47    112.00    +7.45± 2.10       +1.98± 2.85      18/18/18/18/18
+      2   18    112.26     96.60     95.46     95.46     95.61   +15.66± 2.91      +16.81± 4.92      18/18/16/16/16
+    2.5   18    107.88     83.93     78.43     79.12     78.16   +23.95± 5.29      +29.45± 6.15      18/15/12/12/12
+    all  108    115.69    107.26    114.03    114.38    113.59    +8.43± 1.38       +1.65± 2.42      108/105/100/100/100
 -- XZnc: mean served streams 11.11, group-common served 2.61, private served 7.50; BS-specific in 72/108 runs; per run, carried by a subset of the BSs: group-common 1.72, private 3.67
--- CPU per run (s): XZnc 210.7, XZn1c 116.4; XZnc discrete design 0.002
+-- J: stream-set test made in 18/108 runs, 1-layer kept in 9
+-- CPU per run (s): XZnc 210.7, XZn1c 116.4, J 100.6, JH 89.8, J1 100.2; XZnc discrete design 0.002
 ```
 
 
 By setting:
 
 ```
-===== scenario T2, Q = 50: 11 common runs (XZnc: 108, XZn1c: 108, JH: 11)
+===== scenario T2, Q = 50: 108 common runs (XZnc: 108, XZn1c: 108, JH: 108, J1: 108)
 -- T2, all settings
-   R_th    n      XZnc     XZn1c        JH        XZnc-XZn1c   QoS met XZnc/XZn1c/JH
-      0    2     83.60     81.89     89.03    +1.71± 4.10      2/2/2
-    0.5    2     82.21     80.78     85.76    +1.43± 4.37      2/2/2
-      1    2     82.33     78.05     81.01    +4.28± 1.42      2/2/2
-    1.5    2     77.15     77.69     76.83    -0.54± 1.96      2/2/2
-      2    2     77.21     71.78     75.06    +5.43± 4.52      2/2/2
-    2.5    1     93.60     98.20    101.07    -4.60±  nan      1/1/1
-    all   11     81.69     79.87     83.31    +1.82± 1.40      11/11/11
+   R_th    n      XZnc     XZn1c         J        JH        J1        XZnc-XZn1c            XZnc-J   QoS met XZnc/XZn1c/J/JH/J1
+      0   18    117.20    116.59    124.68    123.91    123.76    +0.61± 1.26       -7.48± 2.99      18/18/18/18/18
+    0.5   18    115.47    114.61    121.41    120.44    120.85    +0.87± 0.65       -5.93± 2.70      18/18/18/18/18
+      1   18    110.32    109.01    113.54    113.02    112.95    +1.31± 0.72       -3.21± 1.79      18/18/18/18/18
+    1.5   18    101.18    100.88    103.61    103.47    103.59    +0.30± 0.96       -2.43± 1.90      18/18/18/18/18
+      2   18     94.28     90.65     93.54     94.06     93.22    +3.62± 1.28       +0.73± 0.81      18/18/18/18/18
+    2.5   18     79.97     75.35     76.86     77.34     75.61    +4.61± 1.92       +3.11± 1.47      15/15/15/15/15
+    all  108    103.07    101.18    105.61    105.37    105.00    +1.89± 0.51       -2.54± 0.90      105/105/105/105/105
 -- T2, setting a
-   R_th    n      XZnc     XZn1c        JH        XZnc-XZn1c   QoS met XZnc/XZn1c/JH
-      0    1     96.58     90.78     93.92    +5.81±  nan      1/1/1
-    0.5    1     96.58     90.78     93.92    +5.81±  nan      1/1/1
-      1    1     96.82     91.12     93.92    +5.70±  nan      1/1/1
-    1.5    1     93.94     96.44     93.92    -2.50±  nan      1/1/1
-      2    1     96.18     95.27     99.34    +0.91±  nan      1/1/1
-    2.5    1     93.60     98.20    101.07    -4.60±  nan      1/1/1
-    all    6     95.62     93.76     96.02    +1.85± 1.89      6/6/6
+   R_th    n      XZnc     XZn1c         J        JH        J1        XZnc-XZn1c            XZnc-J   QoS met XZnc/XZn1c/J/JH/J1
+      0    3    107.17    104.63    110.24    106.84    106.33    +2.53± 1.64       -3.08± 2.25      3/3/3/3/3
+    0.5    3    107.17    105.07    111.23    107.15    110.08    +2.10± 1.91       -4.07± 2.76      3/3/3/3/3
+      1    3    107.27    104.43    111.42    107.38    109.07    +2.84± 1.59       -4.15± 2.59      3/3/3/3/3
+    1.5    3    105.44    105.76    108.84    105.70    108.44    -0.32± 1.40       -3.40± 3.11      3/3/3/3/3
+      2    3    107.31    104.13    110.08    108.48    108.73    +3.18± 3.01       -2.77± 2.61      3/3/3/3/3
+    2.5    3    104.32    107.26    106.47    109.33    104.77    -2.94± 1.12       -2.15± 1.65      3/3/3/3/3
+    all   18    106.44    105.21    109.71    107.48    107.90    +1.23± 0.83       -3.27± 0.89      18/18/18/18/18
 -- T2, setting b
-   R_th    n      XZnc     XZn1c        JH        XZnc-XZn1c   QoS met XZnc/XZn1c/JH
-      0    1     70.62     73.01     84.14    -2.39±  nan      1/1/1
-    0.5    1     67.83     70.78     77.61    -2.94±  nan      1/1/1
-      1    1     67.84     64.99     68.09    +2.85±  nan      1/1/1
-    1.5    1     60.36     58.93     59.73    +1.42±  nan      1/1/1
-      2    1     58.23     48.29     50.78    +9.94±  nan      1/1/1
-    all    5     64.98     63.20     68.07    +1.78± 2.32      5/5/5
--- XZnc: mean served streams 7.64, group-common served 2.00, private served 4.64; BS-specific in 5/11 runs; per run, carried by a subset of the BSs: group-common 0.45, private 1.36
--- CPU per run (s): XZnc 29.1, XZn1c 13.5, JH 20.4; XZnc discrete design 0.001
-===== scenario E3, Q = 50: 108 common runs (XZnc: 108, XZn1c: 108)
+   R_th    n      XZnc     XZn1c         J        JH        J1        XZnc-XZn1c            XZnc-J   QoS met XZnc/XZn1c/J/JH/J1
+      0    3     75.28     77.04     84.75     84.75     84.75    -1.75± 0.55       -9.46± 2.68      3/3/3/3/3
+    0.5    3     74.99     75.52     78.06     78.06     78.06    -0.54± 1.31       -3.08± 3.87      3/3/3/3/3
+      1    3     71.69     69.55     71.01     71.01     71.01    +2.14± 1.08       +0.68± 1.23      3/3/3/3/3
+    1.5    3     64.04     63.18     62.39     62.39     62.39    +0.86± 2.33       +1.65± 1.54      3/3/3/3/3
+      2    3     58.08     52.77     53.41     53.41     53.41    +5.31± 2.84       +4.67± 1.85      3/3/3/3/3
+    2.5    3     50.25     41.00     42.77     42.77     42.77    +9.25± 2.58       +7.48± 3.32      3/3/3/3/3
+    all   18     65.72     63.18     65.40     65.40     65.40    +2.55± 1.13       +0.32± 1.60      18/18/18/18/18
+-- T2, setting c
+   R_th    n      XZnc     XZn1c         J        JH        J1        XZnc-XZn1c            XZnc-J   QoS met XZnc/XZn1c/J/JH/J1
+      0    3    117.51    117.51    117.51    117.51    117.51    +0.00± 0.00       +0.00± 0.00      3/3/3/3/3
+    0.5    3    111.22    111.22    111.22    111.22    111.22    +0.00± 0.00       +0.00± 0.00      3/3/3/3/3
+      1    3     95.29     95.29     95.29     95.29     95.29    +0.00± 0.00       +0.00± 0.00      3/3/3/3/3
+    1.5    3     74.50     74.50     74.50     74.50     74.50    +0.00± 0.00       +0.00± 0.00      3/3/3/3/3
+      2    3     49.93     49.93     49.93     49.93     49.93    +0.00± 0.00       +0.00± 0.00      3/3/3/3/3
+    2.5    3      0.00      0.00      0.00      0.00      0.00    +0.00± 0.00       +0.00± 0.00      0/0/0/0/0
+    all   18     74.74     74.74     74.74     74.74     74.74    +0.00± 0.00       +0.00± 0.00      15/15/15/15/15
+-- T2, setting d
+   R_th    n      XZnc     XZn1c         J        JH        J1        XZnc-XZn1c            XZnc-J   QoS met XZnc/XZn1c/J/JH/J1
+      0    3     95.97     97.39    129.06    129.06    129.06    -1.41± 6.77      -33.09± 3.88      3/3/3/3/3
+    0.5    3     96.34     97.25    125.63    125.63    125.63    -0.91± 1.14      -29.30± 1.80      3/3/3/3/3
+      1    3     99.42     98.14    117.95    117.95    117.95    +1.29± 2.21      -18.53± 0.62      3/3/3/3/3
+    1.5    3     91.76     90.56    108.74    108.74    108.74    +1.20± 4.75      -16.98± 3.81      3/3/3/3/3
+      2    3     96.29     84.42     94.69     94.69     94.69   +11.87± 3.72       +1.60± 1.49      3/3/3/3/3
+    2.5    3     94.41     77.00     81.65     81.65     81.65   +17.41± 1.93      +12.76± 2.68      3/3/3/3/3
+    all   18     95.70     90.79    109.62    109.62    109.62    +4.91± 2.19      -13.92± 4.05      18/18/18/18/18
+-- T2, setting e
+   R_th    n      XZnc     XZn1c         J        JH        J1        XZnc-XZn1c            XZnc-J   QoS met XZnc/XZn1c/J/JH/J1
+      0    3    158.62    158.62    158.62    158.62    158.62    +0.00± 0.00       +0.00± 0.00      3/3/3/3/3
+    0.5    3    155.20    155.20    155.20    155.20    155.20    +0.00± 0.00       +0.00± 0.00      3/3/3/3/3
+      1    3    143.46    143.46    143.46    143.46    143.46    +0.00± 0.00       +0.00± 0.00      3/3/3/3/3
+    1.5    3    137.38    137.38    137.38    137.38    137.38    +0.00± 0.00       +0.00± 0.00      3/3/3/3/3
+      2    3    127.31    127.31    127.31    127.31    127.31    +0.00± 0.00       +0.00± 0.00      3/3/3/3/3
+    2.5    3    110.35    110.35    110.35    110.35    110.35    +0.00± 0.00       +0.00± 0.00      3/3/3/3/3
+    all   18    138.72    138.72    138.72    138.72    138.72    +0.00± 0.00       +0.00± 0.00      18/18/18/18/18
+-- T2, setting f
+   R_th    n      XZnc     XZn1c         J        JH        J1        XZnc-XZn1c            XZnc-J   QoS met XZnc/XZn1c/J/JH/J1
+      0    3    148.63    144.33    147.89    146.67    146.28    +4.29± 4.31       +0.74± 0.23      3/3/3/3/3
+    0.5    3    147.94    143.40    147.09    145.38    144.94    +4.54± 2.08       +0.85± 3.00      3/3/3/3/3
+      1    3    144.80    143.21    142.09    143.02    140.89    +1.59± 3.84       +2.71± 1.13      3/3/3/3/3
+    1.5    3    133.96    133.89    129.85    132.11    130.11    +0.07± 4.03       +4.11± 4.04      3/3/3/3/3
+      2    3    126.74    125.36    125.83    130.55    125.27    +1.38± 1.10       +0.90± 2.42      3/3/3/3/3
+    2.5    3    120.49    116.52    119.92    119.92    114.14    +3.98± 5.88       +0.57± 2.50      3/3/3/3/3
+    all   18    137.09    134.45    135.45    136.27    133.60    +2.64± 1.39       +1.65± 0.93      18/18/18/18/18
+-- XZnc: mean served streams 9.11, group-common served 1.78, private served 6.33; BS-specific in 36/108 runs; per run, carried by a subset of the BSs: group-common 0.39, private 1.33
+-- J: stream-set test made in 36/108 runs, 1-layer kept in 12
+-- CPU per run (s): XZnc 66.0, XZn1c 44.5, J 67.8, JH 73.6, J1 49.9; XZnc discrete design 0.001
+===== scenario E3, Q = 50: 108 common runs (XZnc: 108, XZn1c: 108, JH: 108, J1: 108)
 -- E3, all settings
-   R_th    n      XZnc     XZn1c        XZnc-XZn1c   QoS met XZnc/XZn1c
-      0   18    121.78    120.60    +1.18± 1.24      18/18
-    0.5   18    119.56    119.50    +0.06± 1.22      18/18
-      1   18    117.86    115.61    +2.25± 0.99      18/18
-    1.5   18    114.77    107.32    +7.45± 2.10      18/18
-      2   18    112.26     96.60   +15.66± 2.91      18/18
-    2.5   18    107.88     83.93   +23.95± 5.29      18/15
-    all  108    115.69    107.26    +8.43± 1.38      108/105
+   R_th    n      XZnc     XZn1c         J        JH        J1        XZnc-XZn1c            XZnc-J   QoS met XZnc/XZn1c/J/JH/J1
+      0   18    121.78    120.60    139.50    139.60    139.09    +1.18± 1.24      -17.72± 4.78      18/18/18/18/18
+    0.5   18    119.56    119.50    133.02    133.37    132.32    +0.06± 1.22      -13.46± 3.99      18/18/18/18/18
+      1   18    117.86    115.61    124.99    126.26    124.38    +2.25± 0.99       -7.12± 3.67      18/18/18/18/18
+    1.5   18    114.77    107.32    112.79    112.47    112.00    +7.45± 2.10       +1.98± 2.85      18/18/18/18/18
+      2   18    112.26     96.60     95.46     95.46     95.61   +15.66± 2.91      +16.81± 4.92      18/18/16/16/16
+    2.5   18    107.88     83.93     78.43     79.12     78.16   +23.95± 5.29      +29.45± 6.15      18/15/12/12/12
+    all  108    115.69    107.26    114.03    114.38    113.59    +8.43± 1.38       +1.65± 2.42      108/105/100/100/100
 -- E3, setting a
-   R_th    n      XZnc     XZn1c        XZnc-XZn1c   QoS met XZnc/XZn1c
-      0    3    137.13    137.13    +0.00± 0.00      3/3
-    0.5    3    135.09    135.09    +0.00± 0.00      3/3
-      1    3    143.92    143.92    +0.00± 0.00      3/3
-    1.5    3    138.21    138.21    +0.00± 0.00      3/3
-      2    3    143.74    143.74    +0.00± 0.00      3/3
-    2.5    3    138.79    138.79    +0.00± 0.00      3/3
-    all   18    139.48    139.48    +0.00± 0.00      18/18
+   R_th    n      XZnc     XZn1c         J        JH        J1        XZnc-XZn1c            XZnc-J   QoS met XZnc/XZn1c/J/JH/J1
+      0    3    137.13    137.13    137.13    137.13    137.13    +0.00± 0.00       +0.00± 0.00      3/3/3/3/3
+    0.5    3    135.09    135.09    135.09    135.09    135.09    +0.00± 0.00       +0.00± 0.00      3/3/3/3/3
+      1    3    143.92    143.92    143.92    143.92    143.92    +0.00± 0.00       +0.00± 0.00      3/3/3/3/3
+    1.5    3    138.21    138.21    138.21    138.21    138.21    +0.00± 0.00       +0.00± 0.00      3/3/3/3/3
+      2    3    143.74    143.74    143.74    143.74    143.74    +0.00± 0.00       +0.00± 0.00      3/3/3/3/3
+    2.5    3    138.79    138.79    138.79    138.79    138.79    +0.00± 0.00       +0.00± 0.00      3/3/3/3/3
+    all   18    139.48    139.48    139.48    139.48    139.48    +0.00± 0.00       +0.00± 0.00      18/18/18/18/18
 -- E3, setting b
-   R_th    n      XZnc     XZn1c        XZnc-XZn1c   QoS met XZnc/XZn1c
-      0    3     62.88     60.13    +2.75± 0.69      3/3
-    0.5    3     62.22     60.95    +1.27± 0.94      3/3
-      1    3     61.91     56.76    +5.15± 1.66      3/3
-    1.5    3     60.29     50.76    +9.53± 2.08      3/3
-      2    3     59.30     43.61   +15.69± 1.28      3/3
-    2.5    3     57.73     32.29   +25.44± 2.65      3/3
-    all   18     60.72     50.75    +9.97± 2.12      18/18
+   R_th    n      XZnc     XZn1c         J        JH        J1        XZnc-XZn1c            XZnc-J   QoS met XZnc/XZn1c/J/JH/J1
+      0    3     62.88     60.13     76.67     76.67     76.67    +2.75± 0.69      -13.79± 2.55      3/3/3/3/3
+    0.5    3     62.22     60.95     68.77     68.77     68.77    +1.27± 0.94       -6.55± 1.99      3/3/3/3/3
+      1    3     61.91     56.76     60.77     60.77     60.77    +5.15± 1.66       +1.14± 2.56      3/3/3/3/3
+    1.5    3     60.29     50.76     51.52     51.52     51.52    +9.53± 2.08       +8.77± 2.56      3/3/3/3/3
+      2    3     59.30     43.61     42.80     42.80     42.80   +15.69± 1.28      +16.50± 1.87      3/3/3/3/3
+    2.5    3     57.73     32.29      0.00      0.00      0.00   +25.44± 2.65      +57.73± 1.88      3/3/0/0/0
+    all   18     60.72     50.75     50.09     50.09     50.09    +9.97± 2.12      +10.63± 5.69      18/18/15/15/15
 -- E3, setting c
-   R_th    n      XZnc     XZn1c        XZnc-XZn1c   QoS met XZnc/XZn1c
-      0    3    105.54    105.24    +0.30± 3.64      3/3
-    0.5    3     99.45    100.39    -0.95± 1.04      3/3
-      1    3     87.95     83.74    +4.21± 0.34      3/3
-    1.5    3     77.02     64.19   +12.83± 2.22      3/3
-      2    3     69.75     36.60   +33.15± 8.08      3/3
-    2.5    3     58.36      0.00   +58.36± 9.12      3/0
-    all   18     83.01     65.03   +17.98± 5.50      18/15
+   R_th    n      XZnc     XZn1c         J        JH        J1        XZnc-XZn1c            XZnc-J   QoS met XZnc/XZn1c/J/JH/J1
+      0    3    105.54    105.24    122.35    122.35    122.35    +0.30± 3.64      -16.81± 2.42      3/3/3/3/3
+    0.5    3     99.45    100.39    105.73    105.73    105.73    -0.95± 1.04       -6.29± 2.12      3/3/3/3/3
+      1    3     87.95     83.74     85.46     85.46     85.46    +4.21± 0.34       +2.49± 1.36      3/3/3/3/3
+    1.5    3     77.02     64.19     64.42     64.42     64.42   +12.83± 2.22      +12.60± 2.17      3/3/3/3/3
+      2    3     69.75     36.60     12.73     12.73     12.73   +33.15± 8.08      +57.02± 8.93      3/3/1/1/1
+    2.5    3     58.36      0.00      0.00      0.00      0.00   +58.36± 9.12      +58.36± 9.12      3/0/0/0/0
+    all   18     83.01     65.03     65.12     65.12     65.12   +17.98± 5.50      +17.89± 7.40      18/15/13/13/13
 -- E3, setting d
-   R_th    n      XZnc     XZn1c        XZnc-XZn1c   QoS met XZnc/XZn1c
-      0    3     98.57     92.55    +6.02± 3.98      3/3
-    0.5    3     98.40     96.01    +2.39± 3.33      3/3
-      1    3     99.75     93.05    +6.70± 2.23      3/3
-    1.5    3     99.13     87.05   +12.08± 1.94      3/3
-      2    3     97.83     75.81   +22.02± 1.12      3/3
-    2.5    3     99.39     66.53   +32.86± 2.87      3/3
-    all   18     98.84     85.17   +13.68± 2.74      18/18
+   R_th    n      XZnc     XZn1c         J        JH        J1        XZnc-XZn1c            XZnc-J   QoS met XZnc/XZn1c/J/JH/J1
+      0    3     98.57     92.55    124.94    124.94    124.94    +6.02± 3.98      -26.36± 6.97      3/3/3/3/3
+    0.5    3     98.40     96.01    116.46    116.46    116.46    +2.39± 3.33      -18.07± 4.35      3/3/3/3/3
+      1    3     99.75     93.05    107.64    107.64    107.64    +6.70± 2.23       -7.89± 3.75      3/3/3/3/3
+    1.5    3     99.13     87.05     95.37     95.37     95.37   +12.08± 1.94       +3.76± 4.16      3/3/3/3/3
+      2    3     97.83     75.81     81.89     81.89     81.89   +22.02± 1.12      +15.94± 4.46      3/3/3/3/3
+    2.5    3     99.39     66.53     67.18     67.18     67.18   +32.86± 2.87      +32.21± 3.23      3/3/3/3/3
+    all   18     98.84     85.17     98.91     98.91     98.91   +13.68± 2.74       -0.07± 5.10      18/18/18/18/18
 -- E3, setting e
-   R_th    n      XZnc     XZn1c        XZnc-XZn1c   QoS met XZnc/XZn1c
-      0    3    143.45    144.85    -1.41± 3.19      3/3
-    0.5    3    144.93    139.47    +5.46± 1.23      3/3
-      1    3    135.96    134.72    +1.25± 2.06      3/3
-    1.5    3    135.20    134.05    +1.15±10.72      3/3
-      2    3    132.98    117.31   +15.67± 5.54      3/3
-    2.5    3    127.80     99.52   +28.29± 8.37      3/3
-    all   18    136.72    128.32    +8.40± 3.31      18/18
+   R_th    n      XZnc     XZn1c         J        JH        J1        XZnc-XZn1c            XZnc-J   QoS met XZnc/XZn1c/J/JH/J1
+      0    3    143.45    144.85    195.79    195.79    195.79    -1.41± 3.19      -52.34± 8.92      3/3/3/3/3
+    0.5    3    144.93    139.47    191.44    191.44    191.44    +5.46± 1.23      -46.51± 1.68      3/3/3/3/3
+      1    3    135.96    134.72    173.39    173.39    173.39    +1.25± 2.06      -37.43± 8.57      3/3/3/3/3
+    1.5    3    135.20    134.05    150.58    150.58    150.58    +1.15±10.72      -15.38±10.88      3/3/3/3/3
+      2    3    132.98    117.31    124.31    124.31    124.31   +15.67± 5.54       +8.67± 6.47      3/3/3/3/3
+    2.5    3    127.80     99.52     98.11     98.11     98.11   +28.29± 8.37      +29.70± 9.63      3/3/3/3/3
+    all   18    136.72    128.32    155.60    155.60    155.60    +8.40± 3.31      -18.88± 7.78      18/18/18/18/18
 -- E3, setting f
-   R_th    n      XZnc     XZn1c        XZnc-XZn1c   QoS met XZnc/XZn1c
-      0    3    183.13    183.69    -0.56± 4.50      3/3
-    0.5    3    177.27    185.09    -7.82± 3.36      3/3
-      1    3    177.69    181.49    -3.79± 0.81      3/3
-    1.5    3    178.75    169.66    +9.09± 4.64      3/3
-      2    3    169.97    162.51    +7.46± 1.50      3/3
-    2.5    3    165.20    166.44    -1.24± 3.73      3/3
-    all   18    175.34    174.81    +0.52± 1.86      18/18
+   R_th    n      XZnc     XZn1c         J        JH        J1        XZnc-XZn1c            XZnc-J   QoS met XZnc/XZn1c/J/JH/J1
+      0    3    183.13    183.69    180.11    180.70    177.67    -0.56± 4.50       +3.02± 3.02      3/3/3/3/3
+    0.5    3    177.27    185.09    180.64    182.69    176.42    -7.82± 3.36       -3.37± 5.63      3/3/3/3/3
+      1    3    177.69    181.49    178.75    186.37    175.12    -3.79± 0.81       -1.06± 2.85      3/3/3/3/3
+    1.5    3    178.75    169.66    176.63    174.75    171.90    +9.09± 4.64       +2.12± 5.79      3/3/3/3/3
+      2    3    169.97    162.51    167.27    167.27    168.19    +7.46± 1.50       +2.71± 2.39      3/3/3/3/3
+    2.5    3    165.20    166.44    166.51    170.67    164.90    -1.24± 3.73       -1.32± 3.67      3/3/3/3/3
+    all   18    175.34    174.81    174.98    177.07    172.37    +0.52± 1.86       +0.35± 1.53      18/18/18/18/18
 -- XZnc: mean served streams 11.11, group-common served 2.61, private served 7.50; BS-specific in 72/108 runs; per run, carried by a subset of the BSs: group-common 1.72, private 3.67
--- CPU per run (s): XZnc 210.7, XZn1c 116.4; XZnc discrete design 0.002
+-- J: stream-set test made in 18/108 runs, 1-layer kept in 9
+-- CPU per run (s): XZnc 210.7, XZn1c 116.4, J 100.6, JH 89.8, J1 100.2; XZnc discrete design 0.002
 ```
 
 
-**R1.** At Q = 50 the design is ahead of its 1-layer counterpart at every $R_{th}$ in both scenarios. The gap grows
+**R1.** At Q = 50 the design's mean is ahead of its 1-layer counterpart at every $R_{th}$ in both scenarios. The gap grows
 with $R_{th}$: T2 +1.31 ± 0.72 at $R_{th}=1$ and +4.61 ± 1.92 at 2.5; E3 +2.25 ± 0.99 at 1 and
 +23.95 ± 5.29 at 2.5. At $R_{th}\le0.5$ there is little QoS to carry, and the differences are positive but within
-1.3 standard errors: ties, as allowed. T2 at $R_{th}=1.5$ (+0.30 ± 0.96) is the weakest point.
+1.4 standard errors: ties, as allowed. T2 at $R_{th}=1.5$ (+0.30 ± 0.96) is the weakest point: positive
+but not significant at 3 drops; at Q = 5 (4 drops) it is +1.91 ± 0.76.
 
 In the settings where the two coincide except for the group-common streams, the paired runs differ by up to ±15
 bit/s/Hz, even when the group-common streams carry no rate. Example: E3 f, one group of two UEs. There the first five
 evaluations of the search agree to 0.1 bit/s/Hz, and the search then takes different paths, since its rate score
-counts every served stream. This variability, not the design, sets the error bars. It is also why the design's
-advantage shows where its group-common streams have room, settings b–e in E3 and b, d, f in T2. In settings c and e
-of T2 and a of E3 the design and its counterpart are the same, and the differences are exactly zero. In the screen
+counts every served stream. This variability, not the design, sets the error bars. The design's advantage shows
+where its group-common streams have room (over all $R_{th}$: T2 a +1.23 ± 0.83, T2 b +2.55 ± 1.13, T2 d +4.91 ± 2.19, T2 f +2.64 ± 1.39;
+E3 b +9.97 ± 2.12, E3 c +17.98 ± 5.50, E3 d +13.68 ± 2.74, E3 e +8.40 ± 3.31). In settings c and e of T2 and a of E3 the design and its
+counterpart are the same (no free slot or no non-core UE), and the differences are exactly zero. In the screen
 (Q = 5, Section 3.2) the search barely moves from the initial design, and the design leads at every $R_{th}$ with
 smaller error bars.
+
+**Against the current framework (J, for reference; not a requirement).** The design minus J by $R_{th}$ (0, 0.5, …, 2.5): T2 (108 runs): 0 -7.5, 0.5 -5.9, 1 -3.2, 1.5 -2.4, 2 +0.7, 2.5 +3.1; QoS met 105/108 against J 105/108; E3 (108 runs): 0 -17.7, 0.5 -13.5, 1 -7.1, 1.5 +2.0, 2 +16.8, 2.5 +29.4; QoS met 108/108 against J 100/108. The design is behind J at low $R_{th}$ in the settings where it carries private streams by fewer than all BSs (T2 b, d; E3 b–e; Section 4.3) and ahead at high $R_{th}$ (T2 at 2.5, E3 from 1.5 on), where in E3 J misses the QoS more often. Where the design has no free slot or no non-core UE (T2 c, e; E3 a) it is the current design itself, and the runs are identical.
 
 ### 3.2 R1 at Q = 5 (`--tier screen`, 4 drops)
 
@@ -557,22 +603,24 @@ smaller error bars.
 ### 3.3 R2 and R3: the benchmark setting (`--tier bench`, Q = 50)
 
 ```
-===== benchmark setting (T2, K = 16, N = 3, S_max = 12, R_th = 2, Q = 50): 15 common runs (XZnc: 15, sparse_bf: 15, J: 15, J@SC: 15)
+===== benchmark setting (T2, K = 16, N = 3, S_max = 12, R_th = 2, Q = 50): 15 common runs (XZnc: 15, sparse_bf: 15, XZnc@SC: 15, J: 15, J@SC: 15)
 sparse_bf, J (the current framework) and J@SC (stream clustering on its streams): stored runs of Fig. 5.10
 -- by M
-      M    n      XZnc sparse_bf         J      J@SC    XZnc-sparse_bf   QoS met XZnc/sparse_bf/J/J@SC
-    100    5     74.68     63.08     73.51     44.18   +11.61± 3.43      5/5/5/5
-    300    5     81.44     75.09     81.95     54.38    +6.35± 6.04      5/5/5/5
-    500    5     85.68     81.03     88.72     64.51    +4.65± 4.33      5/5/5/5
-    all   15     80.60     73.07     81.39     54.36    +7.54± 2.65      15/15/15/15
+      M    n      XZnc sparse_bf   XZnc@SC         J      J@SC    XZnc-sparse_bf      XZnc-XZnc@SC   QoS met XZnc/sparse_bf/XZnc@SC/J/J@SC
+    100    5     74.68     63.08     46.34     73.51     44.18   +11.61± 3.43      +28.35± 2.43      5/5/5/5/5
+    300    5     81.44     75.09     55.63     81.95     54.38    +6.35± 6.04      +25.81± 2.44      5/5/5/5/5
+    500    5     85.68     81.03     62.09     88.72     64.51    +4.65± 4.33      +23.59± 4.15      5/5/5/5/5
+    all   15     80.60     73.07     54.69     81.39     54.36    +7.54± 2.65      +25.92± 1.74      15/15/15/15/15
 -- XZnc: mean served streams 11.40, group-common served 4.40, private served 6.00; BS-specific in 0/15 runs; per run, carried by a subset of the BSs: group-common 0.00, private 0.00
 -- XZnc: shares of the sum rate over its 15 runs meeting the QoS: super-common 15.6%, group-common 9.2%, private 75.1%
 ```
 
 
-* **R2:** the design (80.6) beats sparse beamforming (73.1) at every $M$. It also beats stream clustering on
-  its own streams and groups (`XZnc@SC`, built from `d.groups`, `d.priority` and `d.core`, with the design's AO start;
-  nan). In this setting ($n=6=BN$, $m=2=B$) every BS carries every private stream, and the free slots carry all
+* **R2:** the design (80.6) beats sparse beamforming (73.1) by +7.5 ± 2.6 over the 15 paired
+  runs. Its mean is ahead at every $M$: clearly at $M=100$, by about one standard error at $M=300$ and 500. It beats
+  stream clustering on its own streams and groups (`XZnc@SC`, built from `d.groups`, `d.priority` and `d.core`, with
+  the design's AO start; 54.7) by +25.9 ± 1.7, and by at least 23.6 at every $M$. Stream
+  clustering on J's streams (J@SC, stored) reaches 54.4. In this setting ($n=6=BN$, $m=2=B$) every BS carries every private stream, and the free slots carry all
   group-common streams (4.4 per run). The design is then the current design
   without its non-core private stream, which J serves in drops with 4 groups, and its rate is that of J (81.4).
 * **R3:** shares of the sum rate (Fig. 5.7 definition, over the 15 runs, all meeting the QoS): super-common
@@ -655,8 +703,9 @@ identical design (verified on all 239 grid, benchmark and $S^{\max}$ configurati
 | T2 | +0.66 ± 0.31 | +0.69 ± 0.33 | +0.83 ± 0.38 | +1.18 ± 0.61 | +1.80 ± 0.99 | +1.31 ± 1.88 | +1.08 ± 0.38 |
 | E3 | +0.33 ± 0.77 | -0.69 ± 0.89 | +0.82 ± 1.11 | +3.25 ± 1.37 | +4.56 ± 1.70 | +9.92 ± 3.81 | +3.03 ± 0.82 |
 
-The design is ahead of this stronger counterpart at every $R_{th}$ in T2, and in E3 from $R_{th}=1$ on (clearly
-from 1.5); in E3 at $R_{th}\le0.5$ the two tie. There the counterpart's non-core private streams, carried by one BS
+The design's mean is ahead of this stronger counterpart at every $R_{th}$ in T2 (by about two standard errors up
+to $R_{th}=2$, within one at 2.5), and clearly ahead in E3 from $R_{th}=1.5$ on; in E3 at $R_{th}\le1$ the two tie.
+There the counterpart's non-core private streams, carried by one BS
 each, use spatial dimensions that the few private streams leave free: they carry 6.9 bit/s/Hz per run on average
 in E3, against none in the current design's runs.
 
@@ -703,30 +752,32 @@ reports: `results/BSD__report*.json`.
 <details><summary>BSD: R1 reports (Q = 50 and Q = 5)</summary>
 
 ```
-===== scenario T2, Q = 50: 11 common runs (BSD: 108, BSD1: 108, JH: 11)
+===== scenario T2, Q = 50: 108 common runs (BSD: 108, BSD1: 108, JH: 108, J1: 108)
 -- T2, all settings
-   R_th    n       BSD      BSD1        JH          BSD-BSD1   QoS met BSD/BSD1/JH
-      0    2     83.60     81.89     89.03    +1.71± 4.10      2/2/2
-    0.5    2     82.21     80.78     85.76    +1.43± 4.37      2/2/2
-      1    2     82.33     78.05     81.01    +4.28± 1.42      2/2/2
-    1.5    2     77.15     77.69     76.83    -0.54± 1.96      2/2/2
-      2    2     77.21     71.78     75.06    +5.43± 4.52      2/2/2
-    2.5    1     93.60     98.20    101.07    -4.60±  nan      1/1/1
-    all   11     81.69     79.87     83.31    +1.82± 1.40      11/11/11
--- BSD: mean served streams 7.64, group-common served 2.00, private served 4.64; BS-specific in 5/11 runs; per run, carried by a subset of the BSs: group-common 0.45, private 1.36
--- CPU per run (s): BSD 28.1, BSD1 12.5, JH 20.4; BSD discrete design 0.001
-===== scenario E3, Q = 50: 108 common runs (BSD: 108, BSD1: 108)
+   R_th    n       BSD      BSD1         J        JH        J1          BSD-BSD1             BSD-J   QoS met BSD/BSD1/J/JH/J1
+      0   18    117.20    116.59    124.68    123.91    123.76    +0.61± 1.26       -7.48± 2.99      18/18/18/18/18
+    0.5   18    115.47    114.61    121.41    120.44    120.85    +0.87± 0.65       -5.93± 2.70      18/18/18/18/18
+      1   18    110.32    109.01    113.54    113.02    112.95    +1.31± 0.72       -3.21± 1.79      18/18/18/18/18
+    1.5   18    101.18    100.88    103.61    103.47    103.59    +0.30± 0.96       -2.43± 1.90      18/18/18/18/18
+      2   18     94.28     90.65     93.54     94.06     93.22    +3.62± 1.28       +0.73± 0.81      18/18/18/18/18
+    2.5   18     79.97     75.35     76.86     77.34     75.61    +4.61± 1.92       +3.11± 1.47      15/15/15/15/15
+    all  108    103.07    101.18    105.61    105.37    105.00    +1.89± 0.51       -2.54± 0.90      105/105/105/105/105
+-- BSD: mean served streams 9.11, group-common served 1.78, private served 6.33; BS-specific in 36/108 runs; per run, carried by a subset of the BSs: group-common 0.39, private 1.33
+-- J: stream-set test made in 36/108 runs, 1-layer kept in 12
+-- CPU per run (s): BSD 64.2, BSD1 44.1, J 67.8, JH 73.6, J1 49.9; BSD discrete design 0.001
+===== scenario E3, Q = 50: 108 common runs (BSD: 108, BSD1: 108, JH: 108, J1: 108)
 -- E3, all settings
-   R_th    n       BSD      BSD1          BSD-BSD1   QoS met BSD/BSD1
-      0   18    132.70    131.96    +0.74± 1.04      18/18
-    0.5   18    129.10    131.46    -2.35± 1.34      18/18
-      1   18    126.36    126.49    -0.13± 1.31      18/18
-    1.5   18    120.12    118.30    +1.82± 2.00      18/18
-      2   18    114.84    110.29    +4.55± 2.79      18/18
-    2.5   18    102.54     94.44    +8.10± 5.20      17/15
-    all  108    120.94    118.82    +2.12± 1.12      107/105
+   R_th    n       BSD      BSD1         J        JH        J1          BSD-BSD1             BSD-J   QoS met BSD/BSD1/J/JH/J1
+      0   18    132.70    131.96    139.50    139.60    139.09    +0.74± 1.04       -6.80± 5.82      18/18/18/18/18
+    0.5   18    129.10    131.46    133.02    133.37    132.32    -2.35± 1.34       -3.92± 6.06      18/18/18/18/18
+      1   18    126.36    126.49    124.99    126.26    124.38    -0.13± 1.31       +1.37± 5.32      18/18/18/18/18
+    1.5   18    120.12    118.30    112.79    112.47    112.00    +1.82± 2.00       +7.33± 4.26      18/18/18/18/18
+      2   18    114.84    110.29     95.46     95.46     95.61    +4.55± 2.79      +19.38± 5.87      18/18/16/16/16
+    2.5   18    102.54     94.44     78.43     79.12     78.16    +8.10± 5.20      +24.11± 5.98      17/15/12/12/12
+    all  108    120.94    118.82    114.03    114.38    113.59    +2.12± 1.12       +6.91± 2.49      107/105/100/100/100
 -- BSD: mean served streams 10.89, group-common served 1.56, private served 8.33; BS-specific in 72/108 runs; per run, carried by a subset of the BSs: group-common 1.39, private 4.50
--- CPU per run (s): BSD 195.4, BSD1 117.6; BSD discrete design 0.002
+-- J: stream-set test made in 18/108 runs, 1-layer kept in 9
+-- CPU per run (s): BSD 195.4, BSD1 117.6, J 100.6, JH 89.8, J1 100.2; BSD discrete design 0.002
 ```
 
 ```
@@ -821,14 +872,17 @@ low $R_{th}$ in the settings where it does not use all BSs.
   of almost every BS (Section 1.6, 36 BSs: each group-common stream at 32 BSs). Section 4.1's core size fixes this
   but loses the clear R1 margin in E3.
 * **The 1-layer counterpart leaves free slots unused.** Section 3.6 compares the design with a counterpart that fills
-  them with private streams of non-core UEs: still ahead from $R_{th}=1$ on, a tie below in E3.
+  them with private streams of non-core UEs (Q = 5): ahead in T2, clearly ahead in E3 from $R_{th}=1.5$ on, a tie
+  below.
 * **Search variability at Q = 50.** Adding a stream changes the search path (its rate score counts every served
   stream), so paired runs differ by up to ±15 bit/s/Hz even where the extra streams carry no rate (Section 3.1).
-  The margins at $R_{th}\le1.5$ are therefore within 1–2 standard errors at 3 drops.
+  At 3 drops the R1 margins in T2 up to $R_{th}=1.5$ (weakest: +0.30 ± 0.96 at 1.5) and in E3 up to $R_{th}=0.5$ are
+  within two standard errors.
 * **Group-common share 9.2% in the benchmark setting**, just under 10% (super-common 15.6%).
 * **Non-nested in $S^{\max}$:** $m$ and the free slots change with $S^{\max}$ (Section 3.4); R4 holds on the
   measured sweep but is not guaranteed by construction.
-* **Cost in E3** is about 1.8–2.9 times the current design's per run (more distinct streams).
+* **Cost in E3** per run is 2.1 times that of J at Q = 50 and 1.9 times at Q = 5 (Section 2): the design serves
+  more distinct streams (11.1 against 8.8 per run for JH at Q = 50). In T2 it costs about as much as J.
 
 ## 6. Choices made without asking
 
@@ -843,7 +897,8 @@ low $R_{th}$ in the settings where it does not use all BSs.
   is a switch, off by default.
 * **Grouping:** the current design's (nearest core by channel correlation), applied to the design's core users.
 * **Ties** in the energy rankings are broken by BS index and group index.
-* **JH and J1 at Q = 50** were run for reference after the design's tiers. <!-- JQ50 -->
+* **JH and J1 at Q = 50** were run for reference after the design's tiers, so that the Q = 50 reports show the
+  current framework (J) on the same runs. They are not part of any requirement.
 * **Machine:** 4 cores. The self-test passed with identical traces before and after the code changes.
 
 ## 7. Files
