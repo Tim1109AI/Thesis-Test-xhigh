@@ -168,11 +168,268 @@ Section 3.7.
 
 ## 2. Cost
 
-<!-- COST -->
+* **The design itself:** 1.0–1.5 ms per drop and setting (`cpu_design`; SUS dominates), no AO, no evaluation of $F$.
+* **Per run** (design + search + refinement; `cpu` of the records, mean over the runs):
+
+| Tier | T2: BSD / BSD1 / JH / J1 | E3: BSD / BSD1 / JH / J1 |
+|---|---|---|
+| screen, Q = 5 | 5.7 / 4.3 / 6.1 / 4.4 s | 22.0 / 12.8 / 8.8 / 10.2 s |
+| confirm, Q = 50 | <!-- CPU50T2 --> | <!-- CPU50E3 --> |
+| bench (T2, Q = 50) | BSD 100.8 s (FINDINGS §7: the current design 90–120 s) | |
+| smax (T2, Q = 50) | BSD 42.1 s | |
+
+  In T2 the design costs about as much as the current design (it serves fewer distinct streams in settings b and d and
+  the same in the others). In E3 it serves more distinct streams (private streams at 2 of 3 BSs plus group-common
+  streams; up to 15 in setting e against 10) and costs about 1.6 times the current framework J at Q = 5; the most
+  expensive setting is E3 e (Q = 50: about 500 CPU-s per run). With the default AO start the design costs 20–40%
+  more (Section 3.7).
 
 ## 3. Results
 
-<!-- RESULTS -->
+Rates in bit/s/Hz (0 when the QoS is missed), differences paired (mean ± standard error over the runs). `BSD` = the
+design, `BSD1` = its 1-layer counterpart, J/JH/J1 = the current framework, its design without the stream-set test and
+its 1-layer RSMA (reference). All outputs below are those of `tools/report.py` (unedited).
+
+### 3.1 R1 at Q = 50 (`--tier confirm`, 3 drops)
+
+<!-- CONFIRM -->
+
+### 3.2 R1 at Q = 5 (`--tier screen`, 4 drops), by setting
+
+```
+===== scenario T2, Q = 5: 144 common runs (BSD: 144, BSD1: 144, JH: 144, J1: 144)
+-- T2, all settings
+   R_th    n       BSD      BSD1         J        JH        J1          BSD-BSD1             BSD-J   QoS met BSD/BSD1/J/JH/J1
+      0   24     96.48     95.91    104.77    104.76    104.41    +0.57± 0.47       -8.28± 2.69      24/24/24/24/24
+    0.5   24     95.87     95.22    102.52    102.51    102.16    +0.65± 0.51       -6.65± 2.34      24/24/24/24/24
+      1   24     91.16     90.11     95.64     95.63     95.34    +1.05± 0.50       -4.48± 1.83      24/24/24/24/24
+    1.5   24     84.99     83.08     87.23     87.23     86.94    +1.91± 0.76       -2.24± 1.17      24/24/24/24/24
+      2   24     70.37     66.73     70.13     70.40     69.41    +3.64± 1.06       +0.24± 0.84      20/20/20/20/20
+    2.5   24     62.05     54.33     55.88     55.88     54.42    +7.72± 2.49       +6.17± 2.90      19/17/16/16/16
+    all  144     83.49     80.90     86.03     86.07     85.45    +2.59± 0.52       -2.54± 0.93      135/133/132/132/132
+-- T2, setting a
+   R_th    n       BSD      BSD1         J        JH        J1          BSD-BSD1             BSD-J   QoS met BSD/BSD1/J/JH/J1
+      0    4     93.81     93.80     93.82     93.82     93.81    +0.01± 0.01       -0.01± 0.01      4/4/4/4/4
+    0.5    4     93.81     93.80     93.82     93.82     93.81    +0.01± 0.01       -0.01± 0.01      4/4/4/4/4
+      1    4     93.81     93.80     93.82     93.82     93.81    +0.01± 0.01       -0.01± 0.01      4/4/4/4/4
+    1.5    4     93.81     93.80     93.82     93.82     93.81    +0.01± 0.01       -0.01± 0.01      4/4/4/4/4
+      2    4     93.80     93.80     93.81     93.81     93.81    +0.01± 0.01       -0.01± 0.01      4/4/4/4/4
+    2.5    4     93.55     93.55     93.56     93.56     93.56    +0.01± 0.01       -0.01± 0.01      4/4/4/4/4
+    all   24     93.76     93.76     93.77     93.77     93.77    +0.01± 0.00       -0.01± 0.00      24/24/24/24/24
+-- T2, setting b
+   R_th    n       BSD      BSD1         J        JH        J1          BSD-BSD1             BSD-J   QoS met BSD/BSD1/J/JH/J1
+      0    4     60.56     59.71     73.49     73.49     73.49    +0.85± 0.68      -12.93± 1.34      4/4/4/4/4
+    0.5    4     60.13     59.28     67.64     67.64     67.64    +0.85± 0.69       -7.51± 1.33      4/4/4/4/4
+      1    4     57.26     55.33     59.67     59.67     59.67    +1.93± 0.82       -2.42± 1.00      4/4/4/4/4
+    1.5    4     50.48     47.88     50.97     50.97     50.97    +2.60± 1.66       -0.49± 1.41      4/4/4/4/4
+      2    4     43.81     39.69     42.45     42.45     42.45    +4.12± 2.00       +1.35± 1.88      4/4/4/4/4
+    2.5    4     30.11      8.08      0.00      0.00      0.00   +22.02± 9.59      +30.11±10.15      3/1/0/0/0
+    all   24     50.39     44.99     49.04     49.04     49.04    +5.40± 2.15       +1.35± 3.26      23/21/20/20/20
+-- T2, setting c
+   R_th    n       BSD      BSD1         J        JH        J1          BSD-BSD1             BSD-J   QoS met BSD/BSD1/J/JH/J1
+      0    4     96.70     96.70     96.70     96.70     96.70    +0.00± 0.00       +0.00± 0.00      4/4/4/4/4
+    0.5    4     93.91     93.91     93.91     93.91     93.91    +0.00± 0.00       +0.00± 0.00      4/4/4/4/4
+      1    4     79.27     79.27     79.27     79.27     79.27    +0.00± 0.00       +0.00± 0.00      4/4/4/4/4
+    1.5    4     58.57     58.57     58.57     58.57     58.57    +0.00± 0.00       +0.00± 0.00      4/4/4/4/4
+      2    4      0.00      0.00      0.00      0.00      0.00    +0.00± 0.00       +0.00± 0.00      0/0/0/0/0
+    2.5    4      0.00      0.00      0.00      0.00      0.00    +0.00± 0.00       +0.00± 0.00      0/0/0/0/0
+    all   24     54.74     54.74     54.74     54.74     54.74    +0.00± 0.00       +0.00± 0.00      16/16/16/16/16
+-- T2, setting d
+   R_th    n       BSD      BSD1         J        JH        J1          BSD-BSD1             BSD-J   QoS met BSD/BSD1/J/JH/J1
+      0    4     78.77     74.75    113.38    113.38    113.38    +4.02± 1.40      -34.61± 3.12      4/4/4/4/4
+    0.5    4     78.77     74.31    109.01    109.01    109.01    +4.46± 1.57      -30.24± 3.13      4/4/4/4/4
+      1    4     77.17     72.53     99.85     99.85     99.85    +4.65± 2.14      -22.67± 3.92      4/4/4/4/4
+    1.5    4     76.40     68.05     88.14     88.14     88.14    +8.35± 2.37      -11.75± 4.75      4/4/4/4/4
+      2    4     72.82     61.37     74.76     74.76     74.76   +11.45± 2.39       -1.95± 4.68      4/4/4/4/4
+    2.5    4     67.52     52.61     60.94     60.94     60.94   +14.91± 4.75       +6.58± 6.56      4/4/4/4/4
+    all   24     75.24     67.27     91.01     91.01     91.01    +7.97± 1.29      -15.77± 3.50      24/24/24/24/24
+-- T2, setting e
+   R_th    n       BSD      BSD1         J        JH        J1          BSD-BSD1             BSD-J   QoS met BSD/BSD1/J/JH/J1
+      0    4    133.91    133.91    133.91    133.91    133.91    +0.00± 0.00       +0.00± 0.00      4/4/4/4/4
+    0.5    4    133.43    133.43    133.43    133.43    133.43    +0.00± 0.00       +0.00± 0.00      4/4/4/4/4
+      1    4    124.60    124.60    124.60    124.60    124.60    +0.00± 0.00       +0.00± 0.00      4/4/4/4/4
+    1.5    4    116.82    116.82    116.82    116.82    116.82    +0.00± 0.00       +0.00± 0.00      4/4/4/4/4
+      2    4    101.53    101.53    101.53    101.53    101.53    +0.00± 0.00       +0.00± 0.00      4/4/4/4/4
+    2.5    4     80.51     80.51     80.51     80.51     80.51    +0.00± 0.00       +0.00± 0.00      4/4/4/4/4
+    all   24    115.13    115.13    115.13    115.13    115.13    +0.00± 0.00       +0.00± 0.00      24/24/24/24/24
+-- T2, setting f
+   R_th    n       BSD      BSD1         J        JH        J1          BSD-BSD1             BSD-J   QoS met BSD/BSD1/J/JH/J1
+      0    4    115.15    116.60    117.30    117.27    115.16    -1.44± 1.44       -2.14± 1.66      4/4/4/4/4
+    0.5    4    115.15    116.60    117.30    117.27    115.16    -1.44± 1.44       -2.14± 1.66      4/4/4/4/4
+      1    4    114.84    115.14    116.61    116.58    114.85    -0.30± 0.29       -1.77± 1.74      4/4/4/4/4
+    1.5    4    113.89    113.40    115.09    115.08    113.33    +0.49± 0.44       -1.20± 1.25      4/4/4/4/4
+      2    4    110.26    104.01    108.19    109.85    103.91    +6.25± 2.51       +2.07± 1.91      4/4/4/4/4
+    2.5    4    100.61     91.23    100.26    100.26     91.50    +9.39± 4.87       +0.35± 0.12      4/4/4/4/4
+    all   24    111.65    109.50    112.46    112.72    108.99    +2.16± 1.23       -0.80± 0.63      24/24/24/24/24
+-- BSD: mean served streams 9.12, group-common served 1.79, private served 6.33; BS-specific in 48/144 runs; per run, carried by a subset of the BSs: group-common 0.38, private 1.33
+-- J: stream-set test made in 48/144 runs, 1-layer kept in 16
+-- CPU per run (s): BSD 5.7, BSD1 4.3, J 7.7, JH 6.1, J1 4.4; BSD discrete design 0.001
+===== scenario E3, Q = 5: 144 common runs (BSD: 144, BSD1: 144, JH: 144, J1: 144)
+-- E3, all settings
+   R_th    n       BSD      BSD1         J        JH        J1          BSD-BSD1             BSD-J   QoS met BSD/BSD1/J/JH/J1
+      0   24    122.71    122.66    128.91    128.82    128.91    +0.05± 0.17       -6.19± 4.73      24/24/24/24/24
+    0.5   24    121.22    120.52    122.90    122.83    122.90    +0.70± 0.56       -1.68± 4.24      24/24/24/24/24
+      1   24    116.05    115.49    113.25    113.24    113.25    +0.56± 0.23       +2.80± 3.61      24/24/24/24/24
+    1.5   24    109.56    107.28    101.61    101.60    101.71    +2.29± 0.81       +7.96± 2.91      24/24/24/24/24
+      2   24    102.15     95.44     83.68     83.68     83.66    +6.70± 2.58      +18.47± 4.49      24/23/20/20/20
+    2.5   24     92.70     84.02     70.64     70.64     70.63    +8.68± 3.28      +22.06± 4.44      22/20/16/16/16
+    all  144    110.73    107.57    103.50    103.47    103.51    +3.16± 0.76       +7.24± 1.86      142/139/132/132/132
+-- E3, setting a
+   R_th    n       BSD      BSD1         J        JH        J1          BSD-BSD1             BSD-J   QoS met BSD/BSD1/J/JH/J1
+      0    4    125.65    125.65    125.65    125.65    125.65    +0.00± 0.00       +0.00± 0.00      4/4/4/4/4
+    0.5    4    125.56    125.56    125.56    125.56    125.56    +0.00± 0.00       +0.00± 0.00      4/4/4/4/4
+      1    4    125.42    125.42    125.42    125.42    125.42    +0.00± 0.00       +0.00± 0.00      4/4/4/4/4
+    1.5    4    125.25    125.25    125.25    125.25    125.25    +0.00± 0.00       +0.00± 0.00      4/4/4/4/4
+      2    4    125.04    125.04    125.04    125.04    125.04    +0.00± 0.00       +0.00± 0.00      4/4/4/4/4
+    2.5    4    125.14    125.14    125.14    125.14    125.14    +0.00± 0.00       +0.00± 0.00      4/4/4/4/4
+    all   24    125.34    125.34    125.34    125.34    125.34    +0.00± 0.00       +0.00± 0.00      24/24/24/24/24
+-- E3, setting b
+   R_th    n       BSD      BSD1         J        JH        J1          BSD-BSD1             BSD-J   QoS met BSD/BSD1/J/JH/J1
+      0    4     86.91     86.91     72.05     72.05     72.05    -0.00± 0.00      +14.86± 1.07      4/4/4/4/4
+    0.5    4     80.13     80.13     64.42     64.42     64.42    -0.00± 0.00      +15.71± 0.92      4/4/4/4/4
+      1    4     70.00     70.00     55.60     55.60     55.60    +0.00± 0.00      +14.40± 1.26      4/4/4/4/4
+    1.5    4     61.32     59.29     46.85     46.85     46.85    +2.03± 2.03      +14.47± 0.66      4/4/4/4/4
+      2    4     51.61     47.63     38.17     38.17     38.17    +3.98± 2.73      +13.43± 1.14      4/4/4/4/4
+    2.5    4     41.25     34.89      0.00      0.00      0.00    +6.36± 3.75      +41.25± 3.98      4/4/0/0/0
+    all   24     65.20     63.14     46.18     46.18     46.18    +2.06± 0.90      +19.02± 2.19      24/24/20/20/20
+-- E3, setting c
+   R_th    n       BSD      BSD1         J        JH        J1          BSD-BSD1             BSD-J   QoS met BSD/BSD1/J/JH/J1
+      0    4    103.90    103.91    113.87    113.87    113.87    -0.00± 0.00       -9.96± 4.05      4/4/4/4/4
+    0.5    4     99.38     98.94     97.36     97.36     97.36    +0.44± 0.44       +2.02± 4.01      4/4/4/4/4
+      1    4     85.94     82.94     76.29     76.29     76.29    +3.01± 0.12       +9.65± 3.11      4/4/4/4/4
+    1.5    4     70.35     61.00     54.52     54.52     54.52    +9.35± 1.71      +15.83± 2.45      4/4/4/4/4
+      2    4     57.21     28.72      0.00      0.00      0.00   +28.49± 8.97      +57.21± 2.20      4/3/0/0/0
+    2.5    4     27.71      0.00      0.00      0.00      0.00   +27.71±16.01      +27.71±16.01      2/0/0/0/0
+    all   24     74.08     62.58     57.01     57.01     57.01   +11.50± 3.71      +17.08± 5.15      22/19/16/16/16
+-- E3, setting d
+   R_th    n       BSD      BSD1         J        JH        J1          BSD-BSD1             BSD-J   QoS met BSD/BSD1/J/JH/J1
+      0    4    125.68    125.67    115.43    115.43    115.43    +0.00± 0.00      +10.25± 4.74      4/4/4/4/4
+    0.5    4    124.91    124.91    109.73    109.73    109.73    +0.00± 0.00      +15.19± 4.14      4/4/4/4/4
+      1    4    121.48    121.48     99.18     99.18     99.18    +0.00± 0.00      +22.31± 3.53      4/4/4/4/4
+    1.5    4    114.24    114.01     86.12     86.12     86.12    +0.23± 0.23      +28.12± 3.39      4/4/4/4/4
+      2    4    105.47    103.29     72.35     72.35     72.35    +2.18± 1.53      +33.12± 4.33      4/4/4/4/4
+    2.5    4     95.66     91.14     58.64     58.64     58.64    +4.52± 3.10      +37.02± 5.54      4/4/4/4/4
+    all   24    114.57    113.42     90.24     90.24     90.24    +1.16± 0.62      +24.33± 2.52      24/24/24/24/24
+-- E3, setting e
+   R_th    n       BSD      BSD1         J        JH        J1          BSD-BSD1             BSD-J   QoS met BSD/BSD1/J/JH/J1
+      0    4    127.48    126.62    179.41    179.41    179.41    +0.86± 0.83      -51.93± 5.15      4/4/4/4/4
+    0.5    4    130.75    126.60    173.48    173.48    173.48    +4.15± 3.07      -42.73± 5.41      4/4/4/4/4
+      1    4    127.76    127.38    157.45    157.45    157.45    +0.38± 0.29      -29.69± 5.49      4/4/4/4/4
+    1.5    4    123.76    121.64    135.06    135.06    135.06    +2.11± 1.34      -11.30± 6.23      4/4/4/4/4
+      2    4    117.28    111.70    110.21    110.21    110.21    +5.57± 4.31       +7.07± 7.17      4/4/4/4/4
+    2.5    4    111.13     97.74     84.76     84.76     84.76   +13.39± 5.37      +26.38± 8.00      4/4/4/4/4
+    all   24    123.03    118.61    140.06    140.06    140.06    +4.41± 1.46      -17.03± 6.17      24/24/24/24/24
+-- E3, setting f
+   R_th    n       BSD      BSD1         J        JH        J1          BSD-BSD1             BSD-J   QoS met BSD/BSD1/J/JH/J1
+      0    4    166.66    167.20    167.03    166.53    167.04    -0.54± 0.50       -0.37± 0.58      4/4/4/4/4
+    0.5    4    166.61    166.99    166.86    166.43    166.87    -0.39± 0.34       -0.25± 0.47      4/4/4/4/4
+      1    4    165.67    165.70    165.53    165.51    165.54    -0.03± 0.02       +0.14± 0.15      4/4/4/4/4
+    1.5    4    162.45    162.47    161.85    161.82    162.46    -0.02± 0.03       +0.61± 0.58      4/4/4/4/4
+      2    4    156.27    156.27    156.28    156.28    156.22    -0.00± 0.02       -0.01± 0.01      4/4/4/4/4
+    2.5    4    155.31    155.22    155.32    155.32    155.25    +0.09± 0.07       -0.01± 0.00      4/4/4/4/4
+    all   24    162.16    162.31    162.15    161.98    162.23    -0.15± 0.10       +0.02± 0.16      24/24/24/24/24
+-- BSD: mean served streams 10.96, group-common served 1.62, private served 8.33; BS-specific in 96/144 runs; per run, carried by a subset of the BSs: group-common 1.46, private 4.50
+-- J: stream-set test made in 24/144 runs, 1-layer kept in 13
+-- CPU per run (s): BSD 22.0, BSD1 12.8, J 13.6, JH 8.8, J1 10.2; BSD discrete design 0.001
+```
+
+### 3.3 R2 and R3: the benchmark setting (`--tier bench`, Q = 50)
+
+```
+===== benchmark setting (T2, K = 16, N = 3, S_max = 12, R_th = 2, Q = 50): 15 common runs (BSD: 15, sparse_bf: 15, BSD@SC: 15, J: 15, J@SC: 15)
+sparse_bf, J (the current framework) and J@SC (stream clustering on its streams): stored runs of Fig. 5.10
+-- by M
+      M    n       BSD sparse_bf    BSD@SC         J      J@SC     BSD-sparse_bf        BSD-BSD@SC   QoS met BSD/sparse_bf/BSD@SC/J/J@SC
+    100    5     74.68     63.08     46.34     73.51     44.18   +11.61± 3.43      +28.35± 2.43      5/5/5/5/5
+    300    5     81.44     75.09     55.63     81.95     54.38    +6.35± 6.04      +25.81± 2.44      5/5/5/5/5
+    500    5     85.68     81.03     62.09     88.72     64.51    +4.65± 4.33      +23.59± 4.15      5/5/5/5/5
+    all   15     80.60     73.07     54.69     81.39     54.36    +7.54± 2.65      +25.92± 1.74      15/15/15/15/15
+-- BSD: mean served streams 11.40, group-common served 4.40, private served 6.00; BS-specific in 0/15 runs; per run, carried by a subset of the BSs: group-common 0.00, private 0.00
+-- BSD: shares of the sum rate over its 15 runs meeting the QoS: super-common 15.6%, group-common 9.2%, private 75.1%
+```
+
+* **R2:** the design beats sparse beamforming by +7.5 ± 2.7 bit/s/Hz (80.6 against 73.1; better at every $M$) and
+  stream clustering on its own streams and groups (`BSD@SC`, built from `d.groups`, `d.priority`, `d.core`; with the
+  design's AO start, Section 1.8) by +25.9 ± 1.7 (54.7). In this setting ($n=6=BN$, $m=2=B$) every BS carries every
+  private stream, and the 5 free slots per BS carry all group-common streams (4.4 on average), so the design is the
+  current design without its non-core private stream (where J serves 4 groups); its rate is that of J (81.4).
+* **R3:** shares of the sum rate (Fig. 5.7 definition, over the 15 runs, all meeting the QoS): super-common 15.6%,
+  group-common 9.2%. In every run the two common layers together carry the QoS of the 10 non-core UEs
+  ($r_c+r_g=20.0$–$20.3$ bit/s/Hz, $10R_{th}=20$); the group-common streams carry 4.0–9.6 of it.
+
+### 3.4 R4: sum rate versus $S^{\max}$ (`--tier smax`, Q = 50)
+
+```
+===== sum rate versus S_max (T2, N = 3, M = 300, Q = 50): 126 runs of BSD
+-- K = 8: mean sum rate over the drops (QoS met / runs)
+  R_th          S=4          S=6          S=8         S=10         S=12         S=14         S=16
+     0   71.76  2/2   101.91  2/2   101.61  2/2   102.22  2/2   102.22  2/2   102.22  2/2   102.22  2/2 
+     1   70.11  2/2    98.44  2/2   103.04  2/2   102.34  2/2   102.34  2/2   102.34  2/2   102.34  2/2 
+     2   65.43  2/2    99.06  2/2   103.46  2/2   102.07  2/2   102.07  2/2   102.07  2/2   102.07  2/2 
+   all   69.10  6/6    99.80  6/6   102.70  6/6   102.21  6/6   102.21  6/6   102.21  6/6   102.21  6/6 
+   change to the next S_max (paired over R_th and drops): 4->6 +30.70±2.48, 6->8 +2.90±1.49, 8->10 -0.49±0.46, 10->12 +0.00±0.00, 12->14 +0.00±0.00, 14->16 +0.00±0.00
+-- K = 12: mean sum rate over the drops (QoS met / runs)
+  R_th          S=4          S=6          S=8         S=10         S=12         S=14         S=16
+     0   72.37  2/2   113.44  2/2   121.29  2/2   124.14  2/2   123.78  2/2   123.78  2/2   123.78  2/2 
+     1   68.31  2/2   106.67  2/2   120.43  2/2   118.51  2/2   119.36  2/2   119.36  2/2   119.36  2/2 
+     2   55.35  2/2    82.86  2/2   100.05  2/2   105.71  2/2   105.79  2/2   105.79  2/2   105.79  2/2 
+   all   65.34  6/6   100.99  6/6   113.92  6/6   116.12  6/6   116.31  6/6   116.31  6/6   116.31  6/6 
+   change to the next S_max (paired over R_th and drops): 4->6 +35.65±2.99, 6->8 +12.93±2.43, 8->10 +2.20±2.79, 10->12 +0.19±0.33, 12->14 +0.00±0.00, 14->16 +0.00±0.00
+-- K = 16: mean sum rate over the drops (QoS met / runs)
+  R_th          S=4          S=6          S=8         S=10         S=12         S=14         S=16
+     0   73.09  2/2   116.64  2/2   122.94  2/2   122.62  2/2   122.63  2/2   122.63  2/2   122.63  2/2 
+     1   67.82  2/2    94.37  2/2   112.45  2/2   110.03  2/2   115.43  2/2   115.43  2/2   115.43  2/2 
+     2   50.02  2/2    50.59  2/2    65.84  2/2    73.47  2/2    91.99  2/2    91.99  2/2    91.99  2/2 
+   all   63.65  6/6    87.20  6/6   100.41  6/6   102.04  6/6   110.02  6/6   110.02  6/6   110.02  6/6 
+   change to the next S_max (paired over R_th and drops): 4->6 +23.56±7.96, 6->8 +13.21±2.99, 8->10 +1.63±2.19, 10->12 +7.98±4.10, 12->14 +0.00±0.00, 14->16 +0.00±0.00
+```
+
+<!-- SMAXNOTE -->
+
+### 3.5 Design requirement: where the BSs carry different streams
+
+Per setting, over the 24 screen runs (4 drops × 6 $R_{th}$; the design does not depend on $R_{th}$): runs in which the
+BSs carry different streams, and per run the private and group-common streams carried by a subset of the BSs only
+(the report's "carried by a subset" count), with an example (drop 901).
+
+| Scen. | Setting ($N,K,S^{\max}$) | $n$ / $m$ | BS-specific runs | private on a subset | group-common on a subset | example (streams per BS, drop 901) |
+|---|---|---|---|---|---|---|
+| T2 | a (3, 8, 12) | 6 / 2 (all) | 0/24 | 0 | 0 | joint |
+| T2 | b (3, 12, 4) | 3 / 1 | 24/24 | 3.00 | 1.25 | BS1: c g1 p2 p3; BS2: c g1 g2 p7 |
+| T2 | c (3, 16, 6) | 5 / 2 (all) | 0/24 | 0 | 0 | joint |
+| T2 | d (5, 12, 6) | 5 / 1 | 24/24 | 5.00 | 1.00 | BS1: c g1 g3 p2 p3 p12; BS2: c g1 g3 g4 p6 p7 |
+| T2 | e (5, 16, 10) | 9 / 2 (all) | 0/24 | 0 | 0 | joint |
+| T2 | f (5, 16, 20) | 10 / 2 (all) | 0/24 | 0 | 0 | joint |
+| E3 | a (3, 8, 12) | 8 / 3 (all) | 0/24 | 0 | 0 | joint (all UEs are core users) |
+| E3 | b (3, 12, 4) | 4 / 2 | 24/24 | 4.00 | 1.00 | BS1: c p3 p9 p12; BS2: c g1 p6 p12; BS3: c p3 p6 p9 |
+| E3 | c (3, 16, 6) | 6 / 2 | 24/24 | 6.00 | 2.75 | BS1: c g1 g2 p7 p13 p15; BS2: c g1 p1 p6 p9 p13; BS3: c p1 p6 p7 p9 p15 |
+| E3 | d (5, 12, 6) | 7 / 2 | 24/24 | 7.00 | 1.00 | BS1: c p1 p3 p8 p9 p12; BS2: c g1 p1 p6 p11 p12; BS3: c p3 p6 p8 p9 p11 |
+| E3 | e (5, 16, 10) | 10 / 2 | 24/24 | 10.00 | 4.00 | BS1: c g2 g4 + 7 private; BS2: c g1 g2 g3 g4 + 5 private; BS3: c g3 + 8 private |
+| E3 | f (5, 16, 20) | 15 / 3 (all) | 0/24 | 0 | 0 | joint |
+
+In T2 settings b and d every core user is served by its strongest BS only ("BSs with core users of their own"); in E3
+settings b–e every core user is served by 2 of the 3 BSs, so that every BS carries core users that one other BS also
+carries; where (eq:n) admits more private streams than $B-1$ BSs can zero-force, all BSs carry all of them. The
+group-common streams differ between BSs wherever the free slots are fewer than the groups. In the benchmark setting
+($S^{\max}=12$, $n=6$, $m=2$) the transmission is joint and every BS carries every group-common stream (all fit).
+
+### 3.6 Sensitivity check: a counterpart that fills the free slots with non-core private streams
+
+<!-- FILL -->
+
+### 3.7 The AO start on the carried antennas
+
+The design with the default start (`XZDn`, same design function `bsx.ZDn` ≡ `bsd.design`, verified identical on all
+grid drops) against the carried-antenna start (`BSD`), screen tier, paired over the 144 runs per scenario
+(`BSD − XZDn`; the runs with joint transmission are identical, so the difference comes from settings b, d (T2) and
+b–e (E3)):
+
+| $R_{th}$ | 0 | 0.5 | 1 | 1.5 | 2 | 2.5 | all | CPU per run |
+|---|---|---|---|---|---|---|---|---|
+| T2 | +1.49 ± 0.83 | +0.45 ± 0.65 | +0.95 ± 0.55 | +1.37 ± 0.59 | +1.23 ± 0.56 | +2.08 ± 1.60 | +1.26 ± 0.35 | 5.7 s vs 6.9 s |
+| E3 | +0.84 ± 1.26 | +1.18 ± 1.24 | +0.54 ± 0.70 | +0.78 ± 0.80 | +0.47 ± 0.95 | +1.58 ± 0.81 | +0.90 ± 0.40 | 22.0 s vs 30.6 s |
+
+The AO converges from the carried-antenna start to better solutions and in fewer iterations.
 
 ## 4. Other methods tried
 
@@ -181,9 +438,24 @@ the screen tier (144 runs per scenario). R1 columns: the variant minus its own 1
 runs; last columns: the variant's mean rate and its mean difference to J on the same runs. Code: `code/bsx.py`
 (variants `X*` in `harness/variants.py`), results `results/X*__*__Q5.jsonl`.
 
-| Variant (counterpart) | Idea | Scen. | Runs | R1 at $R_{th}$ = 0 / 0.5 / 1 / 1.5 / 2 / 2.5 (pilot: 0 / 1 / 2) | Rate | − J |
-|---|---|---|---|---|---|---|
-<!-- OTHERS-TABLE -->
+| Variant − counterpart | Scen. | Runs | R1 at $R_{th}$ = 0 / 0.5 / 1 / 1.5 / 2 / 2.5 (pilot: 0 / 1 / 2) | Rate | − J |
+|---|---|---|---|---|---|
+| XA − XA1 | T2 | 36 (2 drops) | +0.57 ± 0.58 / +0.57 ± 0.58 / +0.56 ± 0.57 | 81.56 | -7.58 |
+| XA − XA1 | E3 | 36 (2 drops) | -0.16 ± 0.15 / -0.01 ± 0.01 / +0.02 ± 0.02 | 107.81 | -0.12 |
+| XC − XC1 | T2 | 36 (2 drops) | -3.83 ± 2.80 / -3.33 ± 2.29 / -0.12 ± 3.89 | 78.57 | -10.57 |
+| XC − XC1 | E3 | 36 (2 drops) | -1.24 ± 0.73 / -1.94 ± 0.73 / -1.90 ± 0.91 | 106.17 | -1.76 |
+| XM − XA1 | T2 | 36 (2 drops) | -2.43 ± 3.05 / -1.10 ± 3.51 / +1.57 ± 3.95 | 80.35 | -8.80 |
+| XM − XA1 | E3 | 36 (2 drops) | -2.01 ± 0.77 / -2.33 ± 0.97 / -1.42 ± 1.01 | 105.94 | -1.99 |
+| XZ − XZ1 | T2 | 36 (2 drops) | +0.95 ± 0.68 / +2.52 ± 1.66 / +1.40 ± 1.10 | 85.44 | -3.70 |
+| XZ − XZ1 | E3 | 36 (2 drops) | -0.76 ± 0.54 / -2.06 ± 1.46 / +2.62 ± 2.25 | 105.33 | -2.60 |
+| XZc − XZ1c | T2 | 144 (4 drops) | +1.03 ± 0.41 / +1.06 ± 0.42 / +1.14 ± 0.46 / +1.38 ± 0.63 / +1.83 ± 0.95 / +1.39 ± 1.89 | 83.71 | -2.31 |
+| XZc − XZ1c | E3 | 144 (4 drops) | +0.30 ± 0.77 / -0.72 ± 0.89 / +0.79 ± 1.11 / +3.14 ± 1.38 / +4.86 ± 1.65 / +10.26 ± 3.76 | 106.97 | +3.47 |
+| XZDc − XZD1c | T2 | 36 (2 drops) | +1.27 ± 0.75 / +1.53 ± 0.85 / +1.80 ± 1.39 | 86.41 | -2.73 |
+| XZDc − XZD1c | E3 | 144 (4 drops) | -0.12 ± 0.10 / +0.41 ± 0.40 / +0.56 ± 0.23 / +1.15 ± 0.88 / +1.46 ± 1.20 / +4.15 ± 3.37 | 110.70 | +7.21 |
+| XZDn − XZDn1 | T2 | 144 (4 drops) | +0.11 ± 0.36 / +0.65 ± 0.59 / +0.85 ± 0.83 / +1.88 ± 0.76 / +2.69 ± 0.97 / +7.29 ± 2.53 | 82.23 | -3.80 |
+| XZDn − XZDn1 | E3 | 144 (4 drops) | -0.09 ± 0.08 / -0.62 ± 0.77 / +0.79 ± 0.60 / +2.75 ± 1.22 / +6.91 ± 2.78 / +7.45 ± 3.13 | 109.83 | +6.34 |
+| BSD − BSD1 | T2 | 144 (4 drops) | +0.57 ± 0.47 / +0.65 ± 0.51 / +1.05 ± 0.50 / +1.91 ± 0.76 / +3.64 ± 1.06 / +7.72 ± 2.49 | 83.49 | -2.54 |
+| BSD − BSD1 | E3 | 144 (4 drops) | +0.05 ± 0.17 / +0.70 ± 0.56 / +0.56 ± 0.23 / +2.29 ± 0.81 / +6.70 ± 2.58 / +8.68 ± 3.28 | 110.73 | +7.24 |
 
 * **XA** (per-BS ranking within the current class order: each BS takes the super-common stream, then the core users'
   private streams in decreasing order of its own channel energy, then group-common streams, then non-core private
@@ -193,7 +465,7 @@ runs; last columns: the variant's mean rate and its mean difference to J on the 
   transmission already had room for them, so R1 is a tie.
 * **XC** (each BS first serves its own core users and its own groups, then cooperates): the group-common streams
   displace cooperation, which is worth more at low $R_{th}$; R1 negative.
-* **XM** (core private and group-common streams ranked together by each BS's energy to their weakest decoder): R1
+* **XM** (core private and group-common streams ranked together by each BS's energy to their weakest decoder; its counterpart is the same design as XA1, whose runs are used): R1
   negative in E3.
 * **XZ / XZc** (zero-forcing-minimal carriage with the current design's number of private streams,
   $n=\min\{K,BN,S^{\max}-1\}$; free slots to group-common streams, then to non-core private streams; counterpart: free

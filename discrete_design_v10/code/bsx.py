@@ -129,3 +129,19 @@ def ZDn(net, p): return zf_minimal(net, p, ncore='dof', leftover=('grp',))
 def ZDn1(net, p): return zf_minimal(net, p, ncore='dof', use_groups=False, leftover=('grp',))
 def Zn(net, p): return zf_minimal(net, p, leftover=('grp',))
 def Zn1(net, p): return zf_minimal(net, p, use_groups=False, leftover=('grp',))
+
+
+# fallback study: every group-common stream carried by the one BS that reaches its weakest member best (if that BS
+# has a free slot, else the next best), instead of filling every free slot
+def ZD1g(net, p):
+    import bsd
+    d = bsd.design(net, p)
+    B, S = p['B'], p['Smax']
+    E = energy(net, p)
+    bm = np.ones((B, d.nS), bool) if d.bsmask is None else np.asarray(d.bsmask, bool)
+    sets = [[j for j in [d.served[i] for i in np.flatnonzero(bm[b])] if not (1 <= j <= d.G)] for b in range(B)]
+    for g, m in enumerate(d.groups):
+        for b in np.argsort(-E[m].min(0), kind='stable'):
+            if len(sets[b]) < S:
+                sets[b].append(1 + g); break
+    return finish(d.groups, sets, d.K, p, d.core, d.priority, 'zf_minimal_1g')

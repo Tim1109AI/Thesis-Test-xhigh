@@ -57,3 +57,10 @@ VARIANTS.update({
     # sensitivity check of the counterpart: the free slots carry private streams of non-core UEs (J1 style)
     'BSD1f': dict(design='bsd:design_1layer_fill', opt=dict(init='core_carried', seed='rule_carried')),
 })
+VARIANTS.update({
+    # study: the current design's number of private streams n = min(K, BN, S_max - 1), zero-forcing-minimal carriage,
+    # private streams for the core users only (free slots: group-common streams / nothing); carried-antenna start
+    'XZnc': dict(design='bsx:Zn', one_layer='XZn1c', opt=dict(init='core_carried', seed='rule_carried')),
+    'XZn1c': dict(design='bsx:Zn1', opt=dict(init='core_carried', seed='rule_carried')),
+    'XZD1gc': dict(design='bsx:ZD1g', one_layer='BSD1', opt=dict(init='core_carried', seed='rule_carried')),
+})
