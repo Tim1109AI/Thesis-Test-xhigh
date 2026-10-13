@@ -1,0 +1,76 @@
+% Excerpts of the thesis (current version): system model of the streams (Section 2.x) and the problem (Chapter 3).
+% Equation references to other parts of the thesis are left as they are.
+\section{Hierarchical Rate Splitting and BS Association} \label{sec:hrs}
+\subsection{User Grouping}
+The UEs are partitioned into at most $G^{\max} = \lfloor K/2 \rfloor$ candidate groups $\mathcal{U} = \{\mathcal{U}_1, \ldots, \mathcal{U}_{G^{\max}}\}$ indexed by $\mathcal{G}^0 = \{1, \ldots, G^{\max}\}$, subject to
+\begin{equation} \label{eq:c-group}
+\mathcal{U}_g \cap \mathcal{U}_{g'} = \varnothing\ (g \ne g'), \quad |\mathcal{U}_g| \in \{0\} \cup \{2, 3, \ldots, K-1\}, \ \forall g \in \mathcal{G}^0.
+\end{equation}
+A candidate group is either empty, and hence inactive, or it holds at least two UEs, a single UE having nothing to share a group-common stream with; and it may not hold all $K$ UEs, since its group-common stream would then duplicate the super-common stream introduced below. The cap $G^{\max}$ is the largest number of groups the size-two requirement admits. The active set is $\mathcal{G} = \{g \in \mathcal{G}^0 : |\mathcal{U}_g| \ge 2\}$, and the group index induced on UE $k$ is $g(k) = g$ if $k \in \mathcal{U}_g$ for some $g \in \mathcal{G}$ and $g(k) = 0$ if $k$ is ungrouped.
+
+\subsection{Streams, Precoders and BS Association}
+Each message splits into a super-common part, a private stream $s_k$, and, for grouped UEs, a group-common part; the super-common parts of all UEs are jointly encoded into $s_c$ and the group-$g$ parts into $s_g$. The transmitted streams are therefore indexed by
+\begin{equation} \label{eq:Jset}
+\mathcal{J} = \{\mathrm{c}\} \cup \{(\mathrm{c},g)\}_{g\in\mathcal{G}} \cup \mathcal{K}, \qquad |\mathcal{J}| = 1 + |\mathcal{G}| + K,
+\end{equation}
+and BS $b$ applies the per-BS precoders $\mathbf{w}_{j,b} \in \mathbb{C}^{N\times1}$, $j \in \mathcal{J}$, writing $\mathbf{w}_{c,b}, \mathbf{w}_{c,g,b}, \mathbf{w}_{k,b}$ when the stream must be named, so that
+\begin{equation} \label{eq:xb}
+\mathbf{x}_b = \mathbf{w}_{c,b} s_c + \sum_{g \in \mathcal{G}} \mathbf{w}_{c,g,b} s_g + \sum_{k \in \mathcal{K}} \mathbf{w}_{k,b} s_k.
+\end{equation}
+BS $b$ serves stream $j$ if and only if $\mathbf{w}_{j,b} \ne \mathbf{0}$. The per-BS power budget and the fronthaul limit, which caps the number of streams a BS may carry, are then
+\begin{equation} \label{eq:c-pow}
+\sum_{j \in \mathcal{J}} \lVert\mathbf{w}_{j,b}\rVert^2 \le P^{\max}, \quad \forall b \in \mathcal{B},
+\end{equation}
+\begin{equation} \label{eq:c-front}
+\sum_{j \in \mathcal{J}} \mathbf{1}\big\{\lVert\mathbf{w}_{j,b}\rVert > 0\big\} \le S^{\max}, \quad \forall b \in \mathcal{B}.
+\end{equation}
+
+\begin{remark}[Fronthaul-limited grouping] \label{rem:grouping}
+By \eqref{eq:Jset} each active group adds one stream to $\mathcal{J}$, and by \eqref{eq:c-front} the network offers at most $BS^{\max}$ stream slots in total. Finer grouping buys interference structure at the direct expense of fronthaul, and the two must be decided jointly. The grouping is also limited by the spatial degrees of freedom of the BS arrays. Under joint transmission (Section~\ref{sec:algo_ahc}), this trade-off is resolved by a fixed order of the streams.
+\end{remark}
+
+\subsection{Reception, Decoding and Rates}
+Stacking the per-BS precoders across BSs into $\mathbf{w}_c, \mathbf{w}_{c,g}, \mathbf{w}_k \in \mathbb{C}^{BN\times1}$ gives the network signal $\mathbf{x} = \mathbf{w}_c s_c + \sum_{g} \mathbf{w}_{c,g} s_g + \sum_{k} \mathbf{w}_k s_k$ and the received signal $y_k = \mathbf{h}_k \mathbf{x} + n_k$ with $n_k \sim \mathcal{CN}(0, \sigma^2)$. Each UE applies SIC in the fixed order super-common, group-common, private. Collecting the interference-plus-noise terms of the three stages, and writing $\mathcal{G}_k = \mathcal{G}\setminus\{g(k)\}$ for the group-common streams that UE $k$ does not decode, which reduces to $\mathcal{G}$ when $k$ is ungrouped since $0 \notin \mathcal{G}$,
+\begin{subequations} \label{eq:Idefs}
+\begin{align}
+I_{c,k} &= \textstyle\sum_{g' \in \mathcal{G}} |\mathbf{h}_k \mathbf{w}_{c,g'}|^2 + \sum_{i \in \mathcal{K}} |\mathbf{h}_k \mathbf{w}_i|^2 + \sigma^2, \\
+I_{c,g,k} &= \textstyle\sum_{g' \in \mathcal{G}\setminus\{g\}} |\mathbf{h}_k \mathbf{w}_{c,g'}|^2 + \sum_{i \in \mathcal{K}} |\mathbf{h}_k \mathbf{w}_i|^2 + \sigma^2, \\
+I_{k} &= \textstyle\sum_{g' \in \mathcal{G}_k} |\mathbf{h}_k \mathbf{w}_{c,g'}|^2 + \sum_{i \in \mathcal{K}\setminus\{k\}} |\mathbf{h}_k \mathbf{w}_i|^2 + \sigma^2,
+\end{align}
+\end{subequations}
+the corresponding SINRs and rates are
+\begin{equation} \label{eq:sinr}
+\gamma_{c,k} = \frac{|\mathbf{h}_k\mathbf{w}_c|^2}{I_{c,k}}, \quad \gamma_{c,g,k} = \frac{|\mathbf{h}_k\mathbf{w}_{c,g}|^2}{I_{c,g,k}}, \quad \gamma_k = \frac{|\mathbf{h}_k\mathbf{w}_k|^2}{I_k},
+\end{equation}
+with $R_{c,k} = \log_2(1+\gamma_{c,k})$, $R_{c,g,k} = \log_2(1+\gamma_{c,g,k})$ and $R_k = \log_2(1+\gamma_k)$. UE $k$ first decodes $s_c$ treating everything else as noise with rate $R_{c,k}$; if $g(k) = g \ne 0$ it then decodes $s_g$ with rate $R_{c,g,k}$; finally it decodes its private stream with rate $R_{k}$. An ungrouped UE skips the middle stage and treats every group-common stream as interference.
+
+With $C_k$ and $C_{g,k}$ the super-common and group-common rate portions allocated to UE $k$, successful decoding by every intended receiver requires
+\begin{equation} \label{eq:c-supalloc}
+\sum_{k \in \mathcal{K}} C_k \le \min_{k \in \mathcal{K}} R_{c,k},
+\end{equation}
+\begin{equation} \label{eq:c-grpalloc}
+\sum_{k \in \mathcal{U}_g} C_{g,k} \le \min_{k \in \mathcal{U}_g} R_{c,g,k}, \quad \forall g \in \mathcal{G},
+\end{equation}
+and, with the convention $C_{0,k} = 0$ for ungrouped UEs, the total rate of UE $k$ and the network sum rate are
+\begin{equation} \label{eq:Rk_total}
+R_k^{total} = C_k + C_{g(k),k} + R_k, \qquad R_\Sigma = \sum_{k\in\mathcal{K}}R_k^{total}.
+\end{equation}
+
+\chapter{Problem Formulation}\label{sec:problem}
+This chapter presents the mathematical formulation of the joint deployment and resource allocation problem. Our goal is to maximize the sum rate of the cooperative multi-BS downlink under per-UE QoS constraints, the power and fronthaul limits of the BSs, the hardware constraints of the DS-STARs and the deployment constraints.
+
+We jointly optimize the RSMA precoders $\mathcal{W} = \{\mathbf{w}_j\}_{j\in\mathcal{J}}$, the DS-STAR coefficients $\boldsymbol{\Theta} = \{\boldsymbol{\Theta}_{l,o}\}_{l\in\mathcal{L},\,o\in\mathcal{O}}$, the deployment $\boldsymbol{\delta}$, the grouping $\mathcal{U}$, and the rate allocations $\mathbf{C} = \{C_k\}_{k\in\mathcal{K}} \cup \{C_{g,k}\}_{g\in\mathcal{G},\,k\in\mathcal{U}_g}$:
+\begin{subequations} \label{eq:problem}
+\begin{align}
+\max_{\mathcal{W}, \boldsymbol{\Theta}, \boldsymbol{\delta}, \mathcal{U}, \mathbf{C}} \quad
+& \sum_{k \in \mathcal{K}} R_k^{total} \label{eq:obj} \\
+\text{s.t.} \quad
+& R_k^{total} \ge R_{th}, \quad \forall k \in \mathcal{K}, \label{eq:c-qos} \\
+& \mathbf{p}_l^R \in \mathrm{Box}, \quad \forall l\in\mathcal{L}, \label{eq:c-box}\\
+& C_k \ge 0,\ C_{g,k} \ge 0, \quad \forall g \in \mathcal{G}, \forall k \in \mathcal{K}, \label{eq:c-nonneg} \\
+& \eqref{eq:c-move},\ \eqref{eq:c-dist},\ \eqref{eq:c-azimuth},\ \eqref{eq:c-mag},\ \eqref{eq:c-phase}, \nonumber\\
+& \eqref{eq:c-group},\ \eqref{eq:c-pow},\ \eqref{eq:c-front},\ \eqref{eq:c-supalloc},\ \eqref{eq:c-grpalloc}. \nonumber
+\end{align}
+\end{subequations}
+The objective \eqref{eq:obj} maximizes the sum rate after deployment. The constraints impose the per-UE QoS floor \eqref{eq:c-qos}, the maximum moving distance \eqref{eq:c-move}, the minimum separation \eqref{eq:c-dist}, the position box \eqref{eq:c-box} and rate non-negativity \eqref{eq:c-nonneg}. The deployment constraints are exactly \eqref{eq:c-move}, \eqref{eq:c-dist}, \eqref{eq:c-box}, and \eqref{eq:c-azimuth}; only azimuth is optimized, elevation is fixed to zero, and no deployment-time limit is imposed. Constraints \eqref{eq:c-mag} and \eqref{eq:c-phase} impose, per face and per element, the passivity and the phase coupling of the DS-STAR. Constraint \eqref{eq:c-group} keeps the candidate groups disjoint and of admissible size; \eqref{eq:c-pow} caps the power radiated by each BS at $P^{\max}$ across all streams it carries, while \eqref{eq:c-front} caps the number of those streams at $S^{\max}$. Finally, \eqref{eq:c-supalloc} and \eqref{eq:c-grpalloc} make the split rates decodable. Problem \eqref{eq:problem} is a non-convex MINLP owing to the discrete partition $\mathcal{U}$, the cardinality indicators in \eqref{eq:c-front}, the coupled spatial angles and deployment geometry, the hardware equalities, and the interference terms. Therefore, we propose a framework that decomposes it into a discrete design, a deployment search and a resource allocation at every candidate deployment, which is presented in the following chapter.
+

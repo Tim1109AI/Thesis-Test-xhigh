@@ -1,0 +1,25 @@
+% Excerpt of the thesis (current version): the current discrete design (Section 4.1).
+\section{Discrete Design} \label{sec:algo_ahc}
+Let $M_{b,j}\in\{0,1\}$ indicate whether BS $b$ transmits stream $j$, so that $\mathbf w_{j,b}=\mathbf 0$ whenever $M_{b,j}=0$ and \eqref{eq:c-front} reads $\sum_jM_{b,j}\le S^{\max}$.
+
+\subsection{Joint Transmission}
+A stream served by BS $b$ occupies one of its $S^{\max}$ fronthaul slots whether or not the other BSs serve it, whereas serving it from every BS lets its precoder use all $BN$ antennas. All BSs therefore serve the same set $\mathcal J_+\subseteq\mathcal J$, i.e., $M_{b,j}=1$ if and only if $j\in\mathcal J_+$, and every served stream is jointly precoded over the $BN$ antennas. In the interference-limited regime, these spatial degrees of freedom outweigh the additional streams that BS-specific associations could carry: in our tests with the network of Chapter~\ref{sec:sim} (twelve configurations, four deployments each), serving every UE from its strongest BS only, with up to $2S^{\max}-1$ distinct streams, attains only $51$--$78\%$ of the joint-transmission rate at the same fronthaul limit. The design serves
+\begin{equation}\label{eq:full_fronthaul}
+|\mathcal J_+|=\min\{S^{\max},\,1+G+K\}
+\end{equation}
+streams, so that \eqref{eq:c-front} holds with equality at every BS unless all streams of $\mathcal J$ are served.
+
+\subsection{Core Users and Groups}
+With $\mathbf h_{d,k}=[\mathbf f_{1,k},\ldots,\mathbf f_{B,k}]$ the stacked direct channel and $\mathbf P_{\mathcal C}$ the orthogonal projector onto $\operatorname{span}\{\mathbf h_{d,u}^H:u\in\mathcal C\}$, the core users are selected by the greedy projection step of semi-orthogonal user selection (SUS) \cite{Yoo2006semiorthogonal}, without its orthogonality threshold,
+\begin{equation}\label{eq:core_selection}
+k^\star=\argmax_{k\notin\mathcal C}\ \bigl\|\mathbf h_{d,k}(\mathbf I_{BN}-\mathbf P_{\mathcal C})\bigr\|_2^2 ,
+\end{equation}
+where $k^\star$ is appended to $\mathcal C$, starting from $\mathcal C=\varnothing$, until $|\mathcal C|=\min\{K,BN\}$. Each non-core UE joins the core user with the most correlated direct channel,
+\begin{equation}\label{eq:nearest_core}
+a(k)=\argmax_{a\in\mathcal C}\ \frac{|\mathbf h_{d,k}\mathbf h_{d,a}^H|^2}{\|\mathbf h_{d,k}\|_2^2\|\mathbf h_{d,a}\|_2^2},\qquad k\in\mathcal K\setminus\mathcal C,
+\end{equation}
+and every core user $a$ with at least one follower heads the group $\mathcal U_a=\{a\}\cup\{k\notin\mathcal C:a(k)=a\}$. The groups are disjoint, each contains one core user and at least one non-core UE, and $|\mathcal U_a|\le K-|\mathcal C|+1<K$ for $|\mathcal C|\ge2$, so that \eqref{eq:c-group} holds.
+
+\subsection{Served Streams}
+The streams are ordered as follows: the super-common stream; the private streams of the core users in the selection order of \eqref{eq:core_selection}; the group-common streams in decreasing order of $|\mathcal U_g|$; and the private streams of the non-core UEs in decreasing order of $\|\mathbf h_{d,k}\|_2^2$. The first $|\mathcal J_+|$ streams of this order are served. The order follows the role of each stream: the super-common stream reaches every UE, the core private streams carry the spatially multiplexed rate, the group-common streams can carry the QoS of their non-core members, which they reach with a lower decoding requirement than the super-common stream, and the remaining private streams cannot be spatially separated from the core streams. The group-common streams, however, take fronthaul slots that could carry private streams of non-core UEs, and whether they pay off depends on the QoS load relative to the channel quality, which the direct channels alone do not reveal. Whenever the order serves group-common streams, we therefore also consider the same order without them, i.e., HRS without group-common streams, which is 1-layer RSMA. Both stream sets are evaluated at the deployments of the initial design of BO (Section~\ref{sec:algo_bo}), and the set with the larger best value of $F$ in \eqref{eq:merit} is kept for the rest of the search, the set with group-common streams on ties; the evaluations of the kept set are the first evaluations of its search. Since 1-layer RSMA is the special case of HRS without group-common streams, the framework thus serves group-common streams only where they increase the penalized sum rate. Each of the two stream sets is nested in $S^{\max}$, so that a larger fronthaul limit only adds streams to it. Apart from this test, the design uses the direct channels only and involves no optimization.
+
